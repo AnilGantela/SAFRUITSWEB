@@ -84,16 +84,16 @@ const Login = () => {
             {error && <ErrorMsg>{error}</ErrorMsg>}
 
             <LoginFormUserName
-              type="email"
+              type="text"
               value={email}
-              placeholder="Enter your Email"
+              placeholder="Username"
               onChange={(e) => setEmail(e.target.value)}
             />
 
             <LoginFormPassword
               type="password"
               value={password}
-              placeholder="Enter your password"
+              placeholder="Password"
               onChange={(e) => setPassword(e.target.value)}
               required
             />
