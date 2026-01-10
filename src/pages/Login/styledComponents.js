@@ -64,7 +64,7 @@ export const LoginImage = styled.img`
 
 export const LoginFormBox = styled.div`
   padding: 40px;
-  width: 45%;
+  width: 50%;
   display: flex;
   flex-direction: column;
   justify-content: center;
