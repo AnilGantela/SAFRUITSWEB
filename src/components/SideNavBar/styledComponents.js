@@ -1,57 +1,75 @@
 import styled from "styled-components";
 
+export const HamburgerButton = styled.button`
+  font-size: 28px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  z-index: 1001;
+  display: none;
+
+  @media (max-width: 768px) {
+    display: block;
+  }
+`;
+
 export const SideNavBarContainer = styled.nav`
-  width: 220px;
-  height: 100vh;
   position: fixed;
   top: 0;
   left: 0;
-  background-color: #9c0101;
-  padding-top: 20px;
+  width: 220px;
+  height: 100vh;
+  background-color: #1e293b;
+  padding-top: 10px;
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  z-index: 1000;
 
-  ul {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    width: 100%;
+  transition: transform 0.3s ease-in-out;
+
+  /* Desktop */
+  @media (min-width: 769px) {
+    transform: translateX(0);
   }
 
+  /* Mobile */
   @media (max-width: 768px) {
-    position: relative;
-    width: 100%;
-    height: auto;
-    flex-direction: row;
-    justify-content: space-around;
-    padding: 10px 0;
+    z-index: 1000;
+    transform: ${({ isOpen }) =>
+      isOpen ? "translateX(0)" : "translateX(-100%)"};
+  }
+
+  ul {
+    margin: 0px;
   }
 `;
 
 export const NavItem = styled.li`
-  width: 100%;
-  margin: 0;
+  list-style: none;
+  padding: 15px 20px;
 
   a {
-    display: block;
-    padding: 15px 20px;
-    color: #fff;
-    font-weight: 500;
+    color: #ffffff;
     text-decoration: none;
-    transition: background 0.3s, color 0.3s;
+    font-size: 16px;
   }
 
   a:hover {
-    background-color: #7a0000;
-    color: #fff;
+    color: #38bdf8;
   }
+`;
 
-  @media (max-width: 768px) {
-    a {
-      padding: 10px;
-      text-align: center;
-    }
+export const Overlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 999;
+
+  @media (min-width: 769px) {
+    display: none;
   }
 `;
