@@ -19,6 +19,7 @@ import fruitBasketGif from "/fruit basket-amico.svg";
 
 const Login = () => {
   const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -82,7 +83,12 @@ const Login = () => {
           <LoginForm onSubmit={handleSubmit}>
             {error && <ErrorMsg>{error}</ErrorMsg>}
 
-            <LoginFormUserName>{fixedEmail}</LoginFormUserName>
+            <LoginFormUserName
+              type="email"
+              value={email}
+              placeholder="Enter your Email"
+              onChange={(e) => setEmail(e.target.value)}
+            />
 
             <LoginFormPassword
               type="password"

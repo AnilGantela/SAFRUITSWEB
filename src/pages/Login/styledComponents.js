@@ -108,7 +108,7 @@ export const ErrorMsg = styled.p`
   color: red;
   margin-bottom: 15px;
 `;
-export const LoginFormUserName = styled.h1`
+export const LoginFormUserName = styled.input`
   padding: 10px;
   margin-bottom: 15px;
   border: 1px solid #ccc;
