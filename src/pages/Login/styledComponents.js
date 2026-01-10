@@ -6,7 +6,7 @@ export const LoginContainer = styled.div`
   align-items: center;
   height: 100vh;
   background-color: #9c0101;
-  @media (max-width: 426px) {
+  @media (max-width: 450px) {
     align-items: center;
     pading: 10px;
   }
@@ -23,7 +23,7 @@ export const LoginBox = styled.div`
   @media (max-width: 1024px) {
     width: 95%;
   }
-  @media (max-width: 426px) {
+  @media (max-width: 450px) {
     flex-direction: column;
     width: 90%;
     height: 90vh;
@@ -41,7 +41,7 @@ export const LoginImageBox = styled.div`
   @media (max-width: 1024px) {
     width: 50%;
   }
-  @media (max-width: 426px) {
+  @media (max-width: 450px) {
     width: 100%;
     box-sizing: border-box;
     height: 45%;
@@ -56,7 +56,7 @@ export const LoginImage = styled.img`
   @media (max-width: 1024px) {
     width: 80%;
   }
-  @media (max-width: 426px) {
+  @media (max-width: 450px) {
     width: 80%;
     height: auto;
   }
@@ -73,7 +73,7 @@ export const LoginFormBox = styled.div`
     width: 50%;
     padding: 20px;
   }
-  @media (max-width: 426px) {
+  @media (max-width: 450px) {
     width: 100%;
     padding: 10px;
     box-sizing: border-box;
@@ -88,7 +88,7 @@ export const LoginCompanyName = styled.h2`
   color: #9c0101;
   font-size: 7.5vh;
   font-weight: bold;
-  @media (max-width: 426px) {
+  @media (max-width: 450px) {
     font-size: clamp(36px, 10vw, 60px);
     margin-bottom: 10px;
   }
@@ -99,7 +99,7 @@ export const LoginForm = styled.form`
   background-color: #fff;
   padding: 20px;
   border-radius: 8px;
-  @media (max-width: 426px) {
+  @media (max-width: 450px) {
     margin-top: 10px;
     padding: 10px;
   }
@@ -114,6 +114,9 @@ export const LoginFormUserName = styled.h1`
   border: 1px solid #ccc;
   border-radius: 5px;
   font-size: clamp(13px, 4vw, 16px);
+  @media (max-width: 450px) {
+    font-size: clamp(11px, 6vw, 13px);
+  }
 `;
 export const LoginFormPassword = styled.input`
   padding: 10px;
