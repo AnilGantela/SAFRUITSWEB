@@ -11,6 +11,8 @@ import {
 } from "./styledComponents";
 
 import ProductAddForm from "../../components/ProductAddForm";
+import SubProductAddForm from "../../components/SubProductAddForm";
+import axios from "axios";
 
 // Import fruit images
 import city1 from "../../assets/fruit-icons/fruit1.svg";
@@ -19,25 +21,23 @@ import city3 from "../../assets/fruit-icons/fruit3.svg";
 import city4 from "../../assets/fruit-icons/fruit4.svg";
 import city5 from "../../assets/fruit-icons/fruit5.svg";
 import city6 from "../../assets/fruit-icons/fruit6.svg";
-import SubProductAddForm from "../../components/SubProductAddForm";
-import axios from "axios";
 
 const Products = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const token = Cookies.get("saFruitsToken");
+  const [searchTerm, setSearchTerm] = useState(""); // <-- Search state
 
+  const token = Cookies.get("saFruitsToken");
+  const cityImages = [city1, city2, city3, city4, city5, city6];
+
+  // Fetch all products
   const fetchProducts = async () => {
     try {
       const response = await axios.get(
         "https://backend-zmoa.onrender.com/products",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setProducts(response.data);
     } catch (error) {
@@ -45,6 +45,7 @@ const Products = () => {
     }
   };
 
+  // Fetch categories for selected product
   const fetchCategories = async (productName) => {
     try {
       const response = await axios.get(
@@ -61,15 +62,14 @@ const Products = () => {
     fetchProducts();
   }, []);
 
+  // Fetch categories whenever selectedProduct changes
   useEffect(() => {
     if (selectedProduct) {
       fetchCategories(selectedProduct);
     } else {
-      setCategories([]); // reset categories if no product selected
+      setCategories([]);
     }
   }, [selectedProduct]);
-
-  const cityImages = [city1, city2, city3, city4, city5, city6];
 
   const getRandomImage = () => {
     const randomIndex = Math.floor(Math.random() * cityImages.length);
@@ -85,15 +85,29 @@ const Products = () => {
 
     setSelectedProduct(productName);
     setIsOpen(true);
-    console.log(selectedProduct);
-    fetchCategories();
   };
 
   const closeSideBar = () => setIsOpen(false);
 
+  // Filter products by search term
+  const filteredProducts = products.filter((product) =>
+    product.productName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <CitiesContainer>
       <h1>Products</h1>
+
+      {/* Search input */}
+      <div style={{ marginBottom: "15px" }}>
+        <input
+          type="text"
+          placeholder="Search products..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ padding: "5px 10px", width: "250px" }}
+        />
+      </div>
 
       {/* Add Product Button */}
       <Popup trigger={<button>Add Product</button>} modal nested>
@@ -103,14 +117,15 @@ const Products = () => {
       </Popup>
 
       <ProductsContentContainer>
-        {products.map((city, index) => (
+        {filteredProducts.map((product, index) => (
           <CityBox
-            key={index}
-            cityName={city.productName}
+            key={product._id}
+            cityName={product.productName}
             cityImage={getRandomImage()}
-            onClick={() => handleCityClick(city.productName)}
+            onClick={() => handleCityClick(product.productName)}
           />
         ))}
+        {filteredProducts.length === 0 && <p>No products found</p>}
       </ProductsContentContainer>
 
       {/* Right Side Panel */}
@@ -120,15 +135,19 @@ const Products = () => {
         {selectedProduct && (
           <>
             <h2>{selectedProduct}</h2>
-            {categories.map((city, index) => (
-              <p>{city.categoryName}</p>
+
+            {/* List categories */}
+            {categories.map((cat, index) => (
+              <p key={index}>{cat.categoryName}</p>
             ))}
-            <Popup trigger={<button>Add Product</button>} modal nested>
+
+            {/* Add Sub-Product */}
+            <Popup trigger={<button>Add Sub-Product</button>} modal nested>
               {(close) => (
                 <SubProductAddForm
                   onClose={close}
                   productName={selectedProduct}
-                  onProductAdded={fetchCategories}
+                  onProductAdded={() => fetchCategories(selectedProduct)}
                 />
               )}
             </Popup>
