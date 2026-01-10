@@ -113,7 +113,7 @@ export const LoginFormUserName = styled.h1`
   margin-bottom: 15px;
   border: 1px solid #ccc;
   border-radius: 5px;
-  font-size: clamp(13px, 4vw, 16px);
+  font-size: clamp(12px, 4vw, 13px);
   @media (max-width: 450px) {
     font-size: clamp(11px, 6vw, 13px);
   }
