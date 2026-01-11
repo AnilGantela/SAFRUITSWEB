@@ -2,7 +2,7 @@ import { createContext, useContext, useReducer } from "react";
 
 // Initial global state
 const initialState = {
-  city: null,
+  city: "none",
   theme: "light",
   isLoading: false,
 

@@ -25,6 +25,10 @@ export const SideNavBarContainer = styled.nav`
   background-color: ${({ $backColor }) => $backColor};
   padding-top: 10px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
 
   transition: transform 0.3s ease-in-out;
 
@@ -57,6 +61,24 @@ export const NavItem = styled.li`
 
   a:hover {
     color: #38bdf8;
+  }
+`;
+
+export const BottomContainer = styled.div`
+  self-align: center;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  h1 {
+    color: white;
+    margin-bottom: 10px;
+  }
+  button {
+    width: 90%;
+    padding: 6px;
+    margin-top: 10px;
   }
 `;
 

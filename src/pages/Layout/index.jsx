@@ -1,4 +1,5 @@
-import React, { Component } from "react";
+import React, { useEffect } from "react";
+import Cookies from "js-cookie";
 import {
   ContentContainer,
   HomeContainer,
@@ -7,19 +8,23 @@ import {
 import SideNavBar from "../../components/SideNavBar";
 import { Outlet } from "react-router-dom";
 
-class Layout extends Component {
-  render() {
-    return (
-      <HomeContainer>
-        <SideNavContainer>
-          <SideNavBar />
-        </SideNavContainer>
-        <ContentContainer>
-          <Outlet />
-        </ContentContainer>
-      </HomeContainer>
-    );
-  }
-}
+const Layout = () => {
+  useEffect(() => {
+    const token = Cookies.get("saFruitsToken");
+    if (!token) {
+      window.location.href = "/login";
+    }
+  }, []);
+  return (
+    <HomeContainer>
+      <SideNavContainer>
+        <SideNavBar />
+      </SideNavContainer>
+      <ContentContainer>
+        <Outlet />
+      </ContentContainer>
+    </HomeContainer>
+  );
+};
 
 export default Layout;
