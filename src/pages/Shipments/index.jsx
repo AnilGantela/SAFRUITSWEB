@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAppContext } from "../../context/AppContext";
+import Popup from "reactjs-popup";
+import AddShipmentForm from "../../components/AddShipmentForm";
 import {
   format,
   startOfWeek,
@@ -12,6 +14,11 @@ import {
 import * as XLSX from "xlsx";
 import axios from "axios";
 import Cookies from "js-cookie";
+import {
+  ShipmentsContainer,
+  ShipmentsContainerHeaderContainer,
+  ShipmentsContainerMenuContainer,
+} from "./styledComponents";
 
 const Shipments = () => {
   const { state } = useAppContext();
@@ -143,19 +150,11 @@ const Shipments = () => {
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>Shipments Page</h1>
-      <p>City: {state.city}</p>
-
-      {/* Filters */}
-      <div
-        style={{
-          marginBottom: "10px",
-          display: "flex",
-          gap: "20px",
-          flexWrap: "wrap",
-        }}
-      >
+    <ShipmentsContainer>
+      <ShipmentsContainerHeaderContainer>
+        <h1>Shipments : {state.city !== "none" ? state.city : ""}</h1>
+      </ShipmentsContainerHeaderContainer>
+      <ShipmentsContainerMenuContainer>
         <label>
           Items per page:&nbsp;
           <select
@@ -169,7 +168,6 @@ const Shipments = () => {
             ))}
           </select>
         </label>
-
         <label>
           Date Filter:&nbsp;
           <select
@@ -185,7 +183,6 @@ const Shipments = () => {
             <option value="custom">Custom Range</option>
           </select>
         </label>
-
         {dateFilter === "custom" && (
           <div>
             <input
@@ -205,11 +202,17 @@ const Shipments = () => {
             />
           </div>
         )}
-
         <button onClick={exportToExcel} style={{ padding: "5px 10px" }}>
           Download Excel
         </button>
-      </div>
+        <Popup trigger={<button>Add Shipment</button>} modal nested>
+          {(close) => (
+            <AddShipmentForm onClose={close} onShipmentAdded={fetchShipments} />
+          )}
+        </Popup>
+      </ShipmentsContainerMenuContainer>
+
+      {/* Filters */}
 
       {loading ? (
         <p>Loading...</p>
@@ -239,6 +242,12 @@ const Shipments = () => {
                 Date
               </th>
               <th style={{ padding: "10px", border: "1px solid #ccc" }}>
+                Total Quantity
+              </th>
+              <th style={{ padding: "10px", border: "1px solid #ccc" }}>
+                remaining Quantity
+              </th>
+              <th style={{ padding: "10px", border: "1px solid #ccc" }}>
                 Orders
               </th>
               <th style={{ padding: "10px", border: "1px solid #ccc" }}>
@@ -248,18 +257,55 @@ const Shipments = () => {
           </thead>
           <tbody>
             {currentShipments.map((ship, index) => (
-              <tr key={ship._id} style={{ border: "1px solid #ccc" }}>
-                <td style={{ padding: "8px" }}>{index + 1}</td>
-                <td style={{ padding: "8px" }}>
-                  {ship.city ? ship.city : "none"}
-                </td>
-                <td style={{ padding: "8px" }}>{ship.vehicleNumber}</td>
-                <td style={{ padding: "8px" }}>
-                  {format(ship.date, "yyyy-MM-dd")}
-                </td>
-                <td style={{ padding: "8px" }}>{ship.orders?.length || 0}</td>
-                <td style={{ padding: "8px" }}>{ship.products?.length || 0}</td>
-              </tr>
+              <Popup
+                trigger={
+                  <tr key={ship._id} style={{ border: "1px solid #ccc" }}>
+                    <td style={{ padding: "8px" }}>{index + 1}</td>
+                    <td style={{ padding: "8px" }}>
+                      {ship.city ? ship.city : "none"}
+                    </td>
+                    <td style={{ padding: "8px" }}>{ship.vehicleNumber}</td>
+                    <td style={{ padding: "8px" }}>
+                      {format(ship.date, "yyyy-MM-dd")}
+                    </td>
+                    <td style={{ padding: "8px" }}>
+                      {ship.products.reduce(
+                        (total, product) => total + product.quantity,
+                        0
+                      )}
+                    </td>
+
+                    <td style={{ padding: "8px" }}>
+                      {/* Total Remaining Quantity */}
+                      total Amount:{" "}
+                      {ship.products.reduce(
+                        (total, product) =>
+                          total + product.quantity * product.priceAtShipment,
+                        0
+                      )}
+                    </td>
+
+                    <td style={{ padding: "8px" }}>
+                      {ship.orders?.length || 0}
+                    </td>
+                    <td style={{ padding: "8px" }}>
+                      {ship.orders?.length || 0}
+                    </td>
+                    <td style={{ padding: "8px" }}>
+                      {ship.products?.length || 0}
+                    </td>
+                  </tr>
+                }
+                modal
+                nested
+              >
+                {(close) => (
+                  <AddShipmentForm
+                    onClose={close}
+                    onShipmentAdded={fetchShipments}
+                  />
+                )}
+              </Popup>
             ))}
           </tbody>
         </table>
@@ -287,7 +333,7 @@ const Shipments = () => {
           Next
         </button>
       </div>
-    </div>
+    </ShipmentsContainer>
   );
 };
 
