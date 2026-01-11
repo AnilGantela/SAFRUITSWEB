@@ -6,8 +6,8 @@ export const HamburgerButton = styled.button`
   border: none;
   cursor: pointer;
   position: fixed;
-  top: 15px;
-  left: 15px;
+  top: 10px;
+  left: 10px;
   z-index: 1001;
   display: none;
 
@@ -22,7 +22,7 @@ export const SideNavBarContainer = styled.nav`
   left: 0;
   width: 220px;
   height: 100vh;
-  background-color: #1e293b;
+  background-color: ${({ $backColor }) => $backColor};
   padding-top: 10px;
   box-sizing: border-box;
 
@@ -36,8 +36,8 @@ export const SideNavBarContainer = styled.nav`
   /* Mobile */
   @media (max-width: 768px) {
     z-index: 1000;
-    transform: ${({ isOpen }) =>
-      isOpen ? "translateX(0)" : "translateX(-100%)"};
+    transform: ${({ $isOpen }) =>
+      $isOpen ? "translateX(0)" : "translateX(-100%)"};
   }
 
   ul {

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Cookies from "js-cookie";
+import { useAppContext } from "../../context/AppContext";
+
 import {
   SideNavBarContainer,
   NavItem,
@@ -10,6 +12,7 @@ import {
 
 const SideNavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { state } = useAppContext();
 
   useEffect(() => {
     const token = Cookies.get("saFruitsToken");
@@ -32,7 +35,7 @@ const SideNavBar = () => {
       {isOpen && <Overlay onClick={closeMenu} />}
 
       {/* Sidebar */}
-      <SideNavBarContainer isOpen={isOpen}>
+      <SideNavBarContainer $isOpen={isOpen} $backColor={state.colors.primary}>
         <ul>
           <NavItem onClick={closeMenu}>
             <Link to="/">Home</Link>

@@ -1,6 +1,16 @@
 import React, { useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
+import {
+  FormContainer,
+  FormHeading,
+  FormField,
+  Label,
+  Input,
+  ButtonGroup,
+  Button,
+  LoadingIcon,
+} from "./styledComponents";
 
 const ProductAddForm = ({ onClose, onProductAdded }) => {
   const [productName, setProductName] = useState("");
@@ -18,12 +28,8 @@ const ProductAddForm = ({ onClose, onProductAdded }) => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      console.log("Product added:", productName);
-
-      // Refresh parent product list
       if (onProductAdded) onProductAdded();
-
-      setProductName(""); // reset form
+      setProductName("");
       onClose();
     } catch (error) {
       console.error("Error adding product:", error);
@@ -33,29 +39,30 @@ const ProductAddForm = ({ onClose, onProductAdded }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ width: "300px" }}>
-      <h3>Add Product</h3>
+    <FormContainer onSubmit={handleSubmit}>
+      <FormHeading>Add Product</FormHeading>
 
-      <div>
-        <label>Product Name</label>
-        <input
+      <FormField>
+        <Label>Product Name</Label>
+        <Input
           type="text"
           value={productName}
           onChange={(e) => setProductName(e.target.value)}
           required
           disabled={loading}
         />
-      </div>
+      </FormField>
 
-      <div style={{ marginTop: "15px" }}>
-        <button type="submit" disabled={loading}>
+      <ButtonGroup>
+        <Button type="submit" disabled={loading}>
+          {loading && <LoadingIcon />}
           {loading ? "Adding..." : "Add"}
-        </button>
-        <button type="button" onClick={onClose} disabled={loading}>
+        </Button>
+        <Button type="button" cancel onClick={onClose} disabled={loading}>
           Cancel
-        </button>
-      </div>
-    </form>
+        </Button>
+      </ButtonGroup>
+    </FormContainer>
   );
 };
 

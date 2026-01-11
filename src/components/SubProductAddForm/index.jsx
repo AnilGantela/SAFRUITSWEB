@@ -1,12 +1,26 @@
 import React, { useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
+import {
+  FormContainer,
+  FormHeading,
+  FormField,
+  Label,
+  Input,
+  ProductNameDisplay,
+  ButtonGroup,
+  Button,
+  LoadingIcon,
+} from "./styledComponents";
 
 const SubProductAddForm = ({ onClose, productName, onProductAdded }) => {
   const [categoryName, setCategoryName] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+
     try {
       const token = Cookies.get("saFruitsToken");
       await axios.post(
@@ -15,46 +29,46 @@ const SubProductAddForm = ({ onClose, productName, onProductAdded }) => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      console.log("Product added:", categoryName);
-
-      // Refresh parent product list
       if (onProductAdded) onProductAdded();
-
-      setCategoryName(""); // reset form
+      setCategoryName("");
       onClose();
     } catch (error) {
-      console.error("Error adding product:", error);
+      console.error("Error adding sub-product:", error);
     } finally {
+      setLoading(false);
     }
-
-    onClose();
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ width: "300px" }}>
-      <h3>Add SubProduct</h3>
+    <FormContainer onSubmit={handleSubmit}>
+      <FormHeading>Add SubProduct</FormHeading>
 
-      <div>
-        <label>Product Name</label>
-        <h1>{productName}</h1>
-      </div>
+      <FormField>
+        <Label>Product Name</Label>
+        <ProductNameDisplay>{productName}</ProductNameDisplay>
+      </FormField>
 
-      <div>
-        <input
+      <FormField>
+        <Label>SubProduct Name</Label>
+        <Input
           type="text"
           value={categoryName}
           onChange={(e) => setCategoryName(e.target.value)}
           required
+          disabled={loading}
         />
-      </div>
+      </FormField>
 
-      <div style={{ marginTop: "15px" }}>
-        <button type="submit">Add</button>
-        <button type="button" onClick={onClose}>
+      <ButtonGroup>
+        <Button type="submit" disabled={loading}>
+          {loading && <LoadingIcon />}
+          {loading ? "Adding..." : "Add"}
+        </Button>
+        <Button type="button" cancel onClick={onClose} disabled={loading}>
           Cancel
-        </button>
-      </div>
-    </form>
+        </Button>
+      </ButtonGroup>
+    </FormContainer>
   );
 };
 

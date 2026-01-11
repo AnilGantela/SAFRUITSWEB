@@ -5,14 +5,18 @@ import "reactjs-popup/dist/index.css";
 
 import CityBox from "../../components/CityBox";
 import {
-  CitiesContainer,
   ProductsSideContainer,
   ProductsContentContainer,
+  ProductsContainer,
+  ProductsContainerHeaderContainer,
+  AddProductButton,
+  ProductsSearchInput,
 } from "./styledComponents";
 
 import ProductAddForm from "../../components/ProductAddForm";
 import SubProductAddForm from "../../components/SubProductAddForm";
 import axios from "axios";
+import { useAppContext } from "../../context/AppContext";
 
 // Import fruit images
 import city1 from "../../assets/fruit-icons/fruit1.svg";
@@ -27,7 +31,8 @@ const Products = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [searchTerm, setSearchTerm] = useState(""); // <-- Search state
+  const [searchTerm, setSearchTerm] = useState("");
+  const { state } = useAppContext();
 
   const token = Cookies.get("saFruitsToken");
   const cityImages = [city1, city2, city3, city4, city5, city6];
@@ -65,7 +70,7 @@ const Products = () => {
   // Fetch categories whenever selectedProduct changes
   useEffect(() => {
     if (selectedProduct) {
-      fetchCategories(selectedProduct);
+      fetchCategories(selectedProduct.productName);
     } else {
       setCategories([]);
     }
@@ -76,15 +81,39 @@ const Products = () => {
     return cityImages[randomIndex];
   };
 
-  const handleCityClick = (productName) => {
-    if (productName === selectedProduct) {
+  const handleCityClick = (product) => {
+    // If nothing is selected yet
+    if (!selectedProduct) {
+      setSelectedProduct(product);
+      setIsOpen(true);
+      return;
+    }
+
+    // If the clicked product is the currently selected one, close sidebar
+    if (product.productName === selectedProduct.productName) {
       setIsOpen(false);
       setSelectedProduct(null);
       return;
     }
 
-    setSelectedProduct(productName);
+    // If a different product is clicked, select it
+    setSelectedProduct(product);
     setIsOpen(true);
+  };
+
+  // Calculate displayed quantity for selectedProduct
+  const getDisplayedQuantity = () => {
+    if (!selectedProduct) return 0;
+
+    if (selectedProduct.productQuantity > 0) {
+      return selectedProduct.productQuantity;
+    } else {
+      // Sum all category quantities
+      return categories.reduce(
+        (total, cat) => total + (cat.categoryQuantity || 0),
+        0
+      );
+    }
   };
 
   const closeSideBar = () => setIsOpen(false);
@@ -95,22 +124,30 @@ const Products = () => {
   );
 
   return (
-    <CitiesContainer>
-      <h1>Products</h1>
+    <ProductsContainer>
+      <ProductsContainerHeaderContainer>
+        <h1>Products</h1>
 
-      {/* Search input */}
-      <div style={{ marginBottom: "15px" }}>
-        <input
+        <ProductsSearchInput
+          $backColor={state.colors.secondary}
           type="text"
           placeholder="Search products..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ padding: "5px 10px", width: "250px" }}
+          $borderColor={state.colors.primary}
         />
-      </div>
+      </ProductsContainerHeaderContainer>
 
       {/* Add Product Button */}
-      <Popup trigger={<button>Add Product</button>} modal nested>
+      <Popup
+        trigger={
+          <AddProductButton $backColor={state.colors.secondary}>
+            Add Product
+          </AddProductButton>
+        }
+        modal
+        nested
+      >
         {(close) => (
           <ProductAddForm onClose={close} onProductAdded={fetchProducts} />
         )}
@@ -122,26 +159,21 @@ const Products = () => {
             key={product._id}
             cityName={product.productName}
             cityImage={getRandomImage()}
-            onClick={() => handleCityClick(product.productName)}
+            onClick={() => handleCityClick(product)}
           />
         ))}
         {filteredProducts.length === 0 && <p>No products found</p>}
       </ProductsContentContainer>
 
       {/* Right Side Panel */}
-      <ProductsSideContainer isOpen={isOpen}>
+      <ProductsSideContainer
+        $isOpen={isOpen}
+        $backColor={state.colors.secondary}
+      >
         <button onClick={closeSideBar}>Close</button>
 
         {selectedProduct && (
           <>
-            <h2>{selectedProduct}</h2>
-
-            {/* List categories */}
-            {categories.map((cat, index) => (
-              <p key={index}>{cat.categoryName}</p>
-            ))}
-
-            {/* Add Sub-Product */}
             <Popup trigger={<button>Add Sub-Product</button>} modal nested>
               {(close) => (
                 <SubProductAddForm
@@ -151,10 +183,56 @@ const Products = () => {
                 />
               )}
             </Popup>
+
+            <h2>{selectedProduct.productName}</h2>
+            <p>Total Quantity: {getDisplayedQuantity()}</p>
+
+            {/* Categories Table */}
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ backgroundColor: "#eee" }}>
+                  <th
+                    style={{
+                      textAlign: "left",
+                      padding: "8px",
+                      border: "1px solid #ccc",
+                    }}
+                  >
+                    Name
+                  </th>
+                  <th
+                    style={{
+                      textAlign: "left",
+                      padding: "8px",
+                      border: "1px solid #ccc",
+                    }}
+                  >
+                    Boxes
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {categories.map((cat, index) => (
+                  <tr
+                    key={index}
+                    style={{ border: "1px solid #ccc", color: "#fff" }}
+                  >
+                    <td
+                      style={{ padding: "8px", borderRight: "1px solid #ccc" }}
+                    >
+                      {cat.categoryName}
+                    </td>
+                    <td style={{ padding: "8px" }}>
+                      {cat.categoryQuantity || 0}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </>
         )}
       </ProductsSideContainer>
-    </CitiesContainer>
+    </ProductsContainer>
   );
 };
 
