@@ -205,7 +205,12 @@ const Shipments = () => {
         <button onClick={exportToExcel} style={{ padding: "5px 10px" }}>
           Download Excel
         </button>
-        <Popup trigger={<button>Add Shipment</button>} modal nested>
+        <Popup
+          trigger={<button>Add Shipment</button>}
+          modal
+          nested
+          contentStyle={{ background: "transparent", border: "none" }}
+        >
           {(close) => (
             <AddShipmentForm onClose={close} onShipmentAdded={fetchShipments} />
           )}
