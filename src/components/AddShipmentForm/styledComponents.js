@@ -2,40 +2,34 @@ import styled from "styled-components";
 
 // Wrapper for the entire form
 export const FormWrapper = styled.form`
-  width: 100%; // increase from 100% to max 90% of screen
-  max-width: 1200px;
-  min-width: 70vw;
   background-color: #fefefe;
   display: flex;
   flex-direction: row;
   box-sizing: border-box;
-  margin-left: auto;
   padding: 6px;
   @media (max-width: 768px) {
-    margin-left: -80px;
-  }
-  @media (max-width: 450px) {
-    width: 100vw;
     flex-direction: column;
-    margin-left: -80px;
   }
 `;
 
 export const FromBox = styled.div`
-  max-width: 50%;
-  flex: 2;
+  min-width: 320px;
+  max-width: 450px;
+  height: 300px;
   display: flex;
   flex-direction: column;
-  @media (max-width: 450px) {
-    min-width: 100%;
-    flex-direction: column;
-    left: 0;
+  border-right: 2px solid red;
+  @media (max-width: 768px) {
+    border-bottom: 2px solid red;
+    border-right: none;
   }
 `;
 
 export const PreviewBox = styled.div`
-  width: 50%;
-  flex: 1;
+  min-width: 320px;
+  max-width: 450px;
+  height: 300px;
+  overflow-x: auto;
   padding: 10px;
   background-color: #fafafa;
   display: flex;
@@ -98,14 +92,14 @@ export const FormContentContainerFirstRow = styled.div`
 export const FormContentContainerSecondRow = styled.div`
   display: flex;
   width: 100%;
+  justify-content: center;
 `;
 
 export const SecondRowContainer = styled.div`
-  width: 50%;
+  width: 45%;
   display: flex;
   justify-content: center;
   align-items: center;
-
   box-sizing: border-box;
 `;
 
@@ -115,6 +109,7 @@ export const InputContainer = styled.div`
   width: 50%;
   flex: 1;
   padding: 5px;
+  min-width: 150px;
 `;
 
 // Label
@@ -125,6 +120,19 @@ export const InputLabel = styled.label`
 `;
 
 export const Input = styled.input`
+  padding: 10px;
+  font-size: 1rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  width: 100%;
+  box-sizing: border-box;
+  &:focus {
+    outline: none;
+    border-color: #007bff;
+  }
+`;
+
+export const SelectInput = styled.select`
   padding: 10px;
   font-size: 1rem;
   border-radius: 6px;
@@ -157,9 +165,12 @@ export const SmallInput = styled(Input)`
 // Row for product inputs
 export const ProductRow = styled.div`
   display: flex;
+  flex-direction: row;
+  gap: 5px;
   flex-wrap: wrap;
   align-items: center;
-  margin-bottom: 10px;
+  justify-content: center;
+  height: 200px;
 `;
 
 // Button styles

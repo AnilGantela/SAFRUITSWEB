@@ -16,9 +16,16 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import {
   ShipmentsContainer,
+  ShipmentsContainerContentContainer,
   ShipmentsContainerHeaderContainer,
   ShipmentsContainerMenuContainer,
+  ShipmentsTable,
+  ShipmentTableDataCell,
+  ShipmentTableHeader,
+  ShipmentTableHeadTitle,
+  ShipmentTableRow,
 } from "./styledComponents";
+import ShipmentDetailView from "../../components/ShipmentDetailView";
 
 const Shipments = () => {
   const { state } = useAppContext();
@@ -206,10 +213,21 @@ const Shipments = () => {
           Download Excel
         </button>
         <Popup
-          trigger={<button>Add Shipment</button>}
+          trigger={
+            <button style={{ padding: "5px 10px" }}>Add Shipment</button>
+          }
           modal
           nested
-          contentStyle={{ background: "transparent", border: "none" }}
+          contentStyle={{
+            background: "transparent",
+            border: "none",
+            margin: "0px",
+            width: "100vw",
+            height: "100vh",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
         >
           {(close) => (
             <AddShipmentForm onClose={close} onShipmentAdded={fetchShipments} />
@@ -217,112 +235,103 @@ const Shipments = () => {
         </Popup>
       </ShipmentsContainerMenuContainer>
 
-      {/* Filters */}
-
-      {loading ? (
-        <p>Loading...</p>
-      ) : currentShipments.length === 0 ? (
-        <p>No shipments found.</p>
-      ) : (
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            marginTop: "10px",
-          }}
-        >
-          <thead>
-            <tr style={{ backgroundColor: "#eee" }}>
-              <th style={{ padding: "10px", border: "1px solid #ccc" }}>
-                S.No
-              </th>
-              <th style={{ padding: "10px", border: "1px solid #ccc" }}>
-                City
-              </th>
-              <th style={{ padding: "10px", border: "1px solid #ccc" }}>
-                vehicle No
-              </th>
-
-              <th style={{ padding: "10px", border: "1px solid #ccc" }}>
-                Date
-              </th>
-              <th style={{ padding: "10px", border: "1px solid #ccc" }}>
-                Total Quantity
-              </th>
-              <th style={{ padding: "10px", border: "1px solid #ccc" }}>
-                remaining Quantity
-              </th>
-              <th style={{ padding: "10px", border: "1px solid #ccc" }}>
-                Orders
-              </th>
-              <th style={{ padding: "10px", border: "1px solid #ccc" }}>
-                Products
-              </th>
-            </tr>
-          </thead>
+      <ShipmentsContainerContentContainer>
+        <ShipmentsTable>
+          <ShipmentTableHeader $bColor={state.colors.primary}>
+            <ShipmentTableRow>
+              <ShipmentTableHeadTitle>S.No</ShipmentTableHeadTitle>
+              <ShipmentTableHeadTitle>City</ShipmentTableHeadTitle>
+              <ShipmentTableHeadTitle>Vel. No.</ShipmentTableHeadTitle>
+              <ShipmentTableHeadTitle>Date</ShipmentTableHeadTitle>
+              <ShipmentTableHeadTitle>Products</ShipmentTableHeadTitle>
+              <ShipmentTableHeadTitle>T.Q.</ShipmentTableHeadTitle>
+              <ShipmentTableHeadTitle>T.A.</ShipmentTableHeadTitle>
+              <ShipmentTableHeadTitle>Orders</ShipmentTableHeadTitle>
+            </ShipmentTableRow>
+          </ShipmentTableHeader>
           <tbody>
-            {currentShipments.map((ship, index) => (
-              <Popup
-                trigger={
-                  <tr key={ship._id} style={{ border: "1px solid #ccc" }}>
-                    <td style={{ padding: "8px" }}>{index + 1}</td>
-                    <td style={{ padding: "8px" }}>
-                      {ship.city ? ship.city : "none"}
-                    </td>
-                    <td style={{ padding: "8px" }}>{ship.vehicleNumber}</td>
-                    <td style={{ padding: "8px" }}>
-                      {format(ship.date, "yyyy-MM-dd")}
-                    </td>
-                    <td style={{ padding: "8px" }}>
-                      {ship.products.reduce(
-                        (total, product) => total + product.quantity,
-                        0
-                      )}
-                    </td>
-
-                    <td style={{ padding: "8px" }}>
-                      {/* Total Remaining Quantity */}
-                      total Amount:{" "}
-                      {ship.products.reduce(
-                        (total, product) =>
-                          total + product.quantity * product.priceAtShipment,
-                        0
-                      )}
-                    </td>
-
-                    <td style={{ padding: "8px" }}>
-                      {ship.orders?.length || 0}
-                    </td>
-                    <td style={{ padding: "8px" }}>
-                      {ship.orders?.length || 0}
-                    </td>
-                    <td style={{ padding: "8px" }}>
-                      {ship.products?.length || 0}
-                    </td>
-                  </tr>
-                }
-                modal
-                nested
-              >
-                {(close) => (
-                  <AddShipmentForm
-                    onClose={close}
-                    onShipmentAdded={fetchShipments}
-                  />
-                )}
-              </Popup>
-            ))}
+            {loading ? (
+              <tr>
+                <td
+                  colSpan="8"
+                  style={{ textAlign: "center", padding: "20px" }}
+                >
+                  Loading...
+                </td>
+              </tr>
+            ) : currentShipments.length === 0 ? (
+              <tr>
+                <td
+                  colSpan="8"
+                  style={{ textAlign: "center", padding: "20px" }}
+                >
+                  No shipments found.
+                </td>
+              </tr>
+            ) : (
+              currentShipments.map((ship, index) => (
+                <Popup
+                  key={ship._id}
+                  trigger={
+                    <ShipmentTableRow
+                      $bColor={state.colors.secondary}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <ShipmentTableDataCell>{index + 1}</ShipmentTableDataCell>
+                      <ShipmentTableDataCell>
+                        {ship.city || "none"}
+                      </ShipmentTableDataCell>
+                      <ShipmentTableDataCell>
+                        {ship.vehicleNumber}
+                      </ShipmentTableDataCell>
+                      <ShipmentTableDataCell>
+                        {format(ship.date, "dd-MM-yyyy")}
+                      </ShipmentTableDataCell>
+                      <ShipmentTableDataCell>
+                        {ship.products?.length || 0}
+                      </ShipmentTableDataCell>
+                      <ShipmentTableDataCell>
+                        {ship.products.reduce(
+                          (total, product) => total + product.quantity,
+                          0
+                        )}
+                      </ShipmentTableDataCell>
+                      <ShipmentTableDataCell>
+                        {ship.products.reduce(
+                          (total, product) =>
+                            total + product.quantity * product.priceAtShipment,
+                          0
+                        )}
+                      </ShipmentTableDataCell>
+                      <ShipmentTableDataCell>
+                        {" "}
+                        {ship.orders?.length || 0}
+                      </ShipmentTableDataCell>
+                    </ShipmentTableRow>
+                  }
+                  modal
+                  nested
+                >
+                  {(close) => (
+                    <ShipmentDetailView onClose={close} shipment={ship} />
+                  )}
+                </Popup>
+              ))
+            )}
           </tbody>
-        </table>
-      )}
+        </ShipmentsTable>
+      </ShipmentsContainerContentContainer>
 
       {/* Pagination */}
       <div
         style={{
-          marginTop: "20px",
+          marginTop: "10px",
           display: "flex",
           gap: "10px",
           alignItems: "center",
+          width: "95%",
+          marginInline: "auto",
+          justifyContent: "flex-end",
         }}
       >
         <button onClick={handlePrev} disabled={page === 1}>

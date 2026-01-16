@@ -21,6 +21,7 @@ import {
   FormContentContainerFirstRow,
   FormContentContainerSecondRow,
   SecondRowContainer,
+  SelectInput,
 } from "./styledComponents";
 
 const AddShipmentForm = ({ onClose, onShipmentAdded }) => {
@@ -178,7 +179,6 @@ const AddShipmentForm = ({ onClose, onShipmentAdded }) => {
   return (
     <FormWrapper onSubmit={handleSubmit}>
       <FromBox>
-        <Title>Add Shipment</Title>
         <FormContentContainer>
           <FormContentContainerFirstRow>
             <InputContainer>
@@ -206,7 +206,6 @@ const AddShipmentForm = ({ onClose, onShipmentAdded }) => {
           </FormContentContainerFirstRow>
           <FormContentContainerSecondRow>
             <SecondRowContainer>
-              {" "}
               {!useTransportCompany ? (
                 <SecondaryButton
                   type="button"
@@ -284,60 +283,74 @@ const AddShipmentForm = ({ onClose, onShipmentAdded }) => {
 
         {/* Optional Transport Company */}
         <ProductRow>
-          <select
-            name="productName"
-            value={newProduct.productName}
-            onChange={handleNewProductChange}
-          >
-            <option value="">Select Product</option>
-            {productsData.map((p) => (
-              <option key={p.productName} value={p.productName}>
-                {p.productName}
-              </option>
-            ))}
-          </select>
-
-          <select
-            name="categoryName"
-            value={newProduct.categoryName}
-            onChange={handleNewProductChange}
-            disabled={
-              !newProduct.productName ||
-              !(
+          <InputContainer>
+            <InputLabel htmlFor="productName">Product Name :</InputLabel>
+            <SelectInput
+              id="productName"
+              name="productName"
+              value={newProduct.productName}
+              onChange={handleNewProductChange}
+            >
+              <option value="">Select Product</option>
+              {productsData.map((p) => (
+                <option key={p.productName} value={p.productName}>
+                  {p.productName}
+                </option>
+              ))}
+            </SelectInput>
+          </InputContainer>
+          <InputContainer>
+            <InputLabel htmlFor="categoryName">Category Name :</InputLabel>
+            <SelectInput
+              id="categoryName"
+              name="categoryName"
+              value={newProduct.categoryName}
+              onChange={handleNewProductChange}
+              disabled={
+                !newProduct.productName ||
+                !(
+                  productsData.find(
+                    (p) => p.productName === newProduct.productName
+                  )?.categories.length > 0
+                )
+              }
+            >
+              <option value="">Select Category (optional)</option>
+              {(
                 productsData.find(
                   (p) => p.productName === newProduct.productName
-                )?.categories.length > 0
-              )
-            }
-          >
-            <option value="">Select Category (optional)</option>
-            {(
-              productsData.find((p) => p.productName === newProduct.productName)
-                ?.categories || []
-            ).map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-
-          <SmallInput
-            type="number"
-            name="quantity"
-            placeholder="Quantity"
-            min="1"
-            value={newProduct.quantity}
-            onChange={handleNewProductChange}
-          />
-
-          <SmallInput
-            type="number"
-            name="priceAtShipment"
-            placeholder="Price at Shipment"
-            min="0"
-            value={newProduct.priceAtShipment}
-            onChange={handleNewProductChange}
-          />
+                )?.categories || []
+              ).map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </SelectInput>
+          </InputContainer>
+          <InputContainer>
+            <InputLabel htmlFor="quantity">Quantity :</InputLabel>
+            <Input
+              id="quantity"
+              name="quantity"
+              type="number"
+              placeholder="Quantity"
+              min="1"
+              value={newProduct.quantity}
+              onChange={handleNewProductChange}
+            />
+          </InputContainer>
+          <InputContainer>
+            <InputLabel htmlFor="priceAtShipment">Price :</InputLabel>
+            <Input
+              id="priceAtShipment"
+              type="number"
+              name="priceAtShipment"
+              placeholder="Price at Shipment"
+              min="0"
+              value={newProduct.priceAtShipment}
+              onChange={handleNewProductChange}
+            />
+          </InputContainer>
 
           <SecondaryButton type="button" onClick={addNewProductToList}>
             Add Product
