@@ -1,9 +1,51 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import Cookies from "js-cookie";
+import axios from "axios";
 
-const ShipmentDetailView = ({ shipment }) => {
-  if (!shipment) {
-    return <div>No shipment data available</div>;
-  }
+const ShipmentDetailView = ({ shipment: shipmentProp }) => {
+  const { shipmentId } = useParams();
+
+  const [shipment, setShipment] = useState(shipmentProp || null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const token = Cookies.get("saFruitsToken");
+
+  useEffect(() => {
+    // If shipment is already passed as prop, no need to fetch
+    if (shipmentProp) {
+      setShipment(shipmentProp);
+      return;
+    }
+
+    // If no prop and no URL param, do nothing
+    if (!shipmentId) return;
+
+    const fetchShipment = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(
+          `https://backend-zmoa.onrender.com/shipments/${shipmentId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        setShipment(response.data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchShipment();
+  }, [shipmentProp, shipmentId]);
+
+  // ---------- UI states ----------
+  if (loading) return <div>Loading shipment...</div>;
+  if (error) return <div>{error}</div>;
+  if (!shipment) return <div>No shipment data available</div>;
 
   const {
     shipmentDate,
@@ -16,17 +58,26 @@ const ShipmentDetailView = ({ shipment }) => {
   return (
     <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
       <h2>Shipment Details</h2>
+
       <p>
-        <strong>Date:</strong> {new Date(shipmentDate).toLocaleDateString()}
+        <strong>Date:</strong>{" "}
+        {shipmentDate
+          ? new Date(shipmentDate).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
+          : "N/A"}
+      </p>
+
+      <p>
+        <strong>Transport Company:</strong> {transportCompany || "N/A"}
       </p>
       <p>
-        <strong>Transport Company:</strong> {transportCompany}
+        <strong>Vehicle Number:</strong> {vehicleNumber || "N/A"}
       </p>
       <p>
-        <strong>Vehicle Number:</strong> {vehicleNumber}
-      </p>
-      <p>
-        <strong>City:</strong> {city}
+        <strong>City:</strong> {city || "N/A"}
       </p>
 
       <h3>Products</h3>

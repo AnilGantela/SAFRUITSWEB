@@ -25,7 +25,7 @@ import {
   ShipmentTableHeadTitle,
   ShipmentTableRow,
 } from "./styledComponents";
-import ShipmentDetailView from "../../components/ShipmentDetailView";
+import OrderDetailView from "../../components/OrderDetailView";
 
 const Shipments = () => {
   const { state } = useAppContext();
@@ -46,17 +46,19 @@ const Shipments = () => {
     try {
       const token = Cookies.get("saFruitsToken");
       const response = await axios.get(
-        "https://backend-zmoa.onrender.com/shipments/",
+        "https://backend-zmoa.onrender.com/orders/",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      if (response.data && Array.isArray(response.data)) {
+      console.log(response.data);
+
+      if (response.data && Array.isArray(response.data.orders)) {
         // Convert shipmentDate to Date object
-        const shipmentsWithDate = response.data.map((ship) => ({
-          ...ship,
-          date: new Date(ship.shipmentDate),
+        const shipmentsWithDate = response.data.orders.map((order) => ({
+          ...order,
+          date: new Date(order.orderDate),
         }));
         setAllShipments(shipmentsWithDate);
       }
@@ -148,16 +150,21 @@ const Shipments = () => {
       "Products Count": ship.products?.length || 0,
     }));
 
+    const now = new Date();
+    const fileName = `orders_${now.getDate()}-${
+      now.getMonth() + 1
+    }-${now.getFullYear()}_${now.getHours()}-${now.getMinutes()}.xlsx`;
+
     const worksheet = XLSX.utils.json_to_sheet(wsData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Shipments");
-    XLSX.writeFile(workbook, "shipments.xlsx");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "orders");
+    XLSX.writeFile(workbook, fileName);
   };
 
   return (
     <ShipmentsContainer>
       <ShipmentsContainerHeaderContainer>
-        <h1>Shipments : {state.city !== "none" ? state.city : ""}</h1>
+        <h1>Orders : {state.city !== "none" ? state.city : ""}</h1>
       </ShipmentsContainerHeaderContainer>
       <ShipmentsContainerMenuContainer>
         <label>
@@ -239,12 +246,10 @@ const Shipments = () => {
             <ShipmentTableRow>
               <ShipmentTableHeadTitle>S.No</ShipmentTableHeadTitle>
               <ShipmentTableHeadTitle>City</ShipmentTableHeadTitle>
-              <ShipmentTableHeadTitle>Vel. No.</ShipmentTableHeadTitle>
+              <ShipmentTableHeadTitle>Customer</ShipmentTableHeadTitle>
               <ShipmentTableHeadTitle>Date</ShipmentTableHeadTitle>
               <ShipmentTableHeadTitle>Products</ShipmentTableHeadTitle>
-              <ShipmentTableHeadTitle>T.Q.</ShipmentTableHeadTitle>
-              <ShipmentTableHeadTitle>T.A.</ShipmentTableHeadTitle>
-              <ShipmentTableHeadTitle>Orders</ShipmentTableHeadTitle>
+              <ShipmentTableHeadTitle>Amount</ShipmentTableHeadTitle>
             </ShipmentTableRow>
           </ShipmentTableHeader>
           <tbody>
@@ -280,30 +285,16 @@ const Shipments = () => {
                         {ship.city || "none"}
                       </ShipmentTableDataCell>
                       <ShipmentTableDataCell>
-                        {ship.vehicleNumber}
+                        {ship.customerName}
                       </ShipmentTableDataCell>
                       <ShipmentTableDataCell>
                         {format(ship.date, "dd-MM-yyyy")}
                       </ShipmentTableDataCell>
                       <ShipmentTableDataCell>
-                        {ship.products?.length || 0}
+                        {ship.orderProducts?.length || 0}
                       </ShipmentTableDataCell>
                       <ShipmentTableDataCell>
-                        {ship.products.reduce(
-                          (total, product) => total + product.quantity,
-                          0
-                        )}
-                      </ShipmentTableDataCell>
-                      <ShipmentTableDataCell>
-                        {ship.products.reduce(
-                          (total, product) =>
-                            total + product.quantity * product.priceAtShipment,
-                          0
-                        )}
-                      </ShipmentTableDataCell>
-                      <ShipmentTableDataCell>
-                        {" "}
-                        {ship.orders?.length || 0}
+                        {ship.totalAmount}
                       </ShipmentTableDataCell>
                     </ShipmentTableRow>
                   }
@@ -311,7 +302,7 @@ const Shipments = () => {
                   nested
                 >
                   {(close) => (
-                    <ShipmentDetailView onClose={close} shipment={ship} />
+                    <OrderDetailView onClose={close} shipment={ship} />
                   )}
                 </Popup>
               ))
