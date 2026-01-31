@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useAppContext } from "../../context/AppContext";
 import Popup from "reactjs-popup";
-import AddShipmentForm from "../../components/AddShipmentForm";
+import { useNavigate } from "react-router-dom";
+
 import {
   format,
   startOfWeek,
@@ -29,6 +30,7 @@ import OrderDetailView from "../../components/OrderDetailView";
 
 const Shipments = () => {
   const { state } = useAppContext();
+  const navigate = useNavigate();
 
   const [allShipments, setAllShipments] = useState([]);
   const [filteredShipments, setFilteredShipments] = useState([]);
@@ -49,7 +51,7 @@ const Shipments = () => {
         "https://backend-zmoa.onrender.com/orders/",
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       console.log(response.data);
@@ -81,7 +83,7 @@ const Shipments = () => {
     // City filter
     if (state.city && state.city !== "none") {
       filtered = filtered.filter(
-        (ship) => ship.city?.toLowerCase() === state.city.toLowerCase()
+        (ship) => ship.city?.toLowerCase() === state.city.toLowerCase(),
       );
     }
 
@@ -90,21 +92,21 @@ const Shipments = () => {
     switch (dateFilter) {
       case "today":
         filtered = filtered.filter(
-          (ship) => ship.date.toDateString() === today.toDateString()
+          (ship) => ship.date.toDateString() === today.toDateString(),
         );
         break;
       case "lastWeek":
         const weekStart = startOfWeek(today);
         const weekEnd = endOfWeek(today);
         filtered = filtered.filter(
-          (ship) => ship.date >= weekStart && ship.date <= weekEnd
+          (ship) => ship.date >= weekStart && ship.date <= weekEnd,
         );
         break;
       case "fullMonth":
         const monthStart = startOfMonth(today);
         const monthEnd = endOfMonth(today);
         filtered = filtered.filter(
-          (ship) => ship.date >= monthStart && ship.date <= monthEnd
+          (ship) => ship.date >= monthStart && ship.date <= monthEnd,
         );
         break;
       case "pastSixMonths":
@@ -118,7 +120,7 @@ const Shipments = () => {
           const fromDate = new Date(customRange.from);
           const toDate = new Date(customRange.to);
           filtered = filtered.filter(
-            (ship) => ship.date >= fromDate && ship.date <= toDate
+            (ship) => ship.date >= fromDate && ship.date <= toDate,
           );
         }
         break;
@@ -132,7 +134,7 @@ const Shipments = () => {
 
   const currentShipments = filteredShipments.slice(
     (page - 1) * limit,
-    page * limit
+    page * limit,
   );
 
   const handlePrev = () => setPage((prev) => Math.max(prev - 1, 1));
@@ -217,25 +219,12 @@ const Shipments = () => {
         <button onClick={exportToExcel} style={{ padding: "5px 10px" }}>
           Download Excel
         </button>
-        <Popup
-          trigger={<button style={{ padding: "5px 10px" }}>Add Order</button>}
-          modal
-          nested
-          contentStyle={{
-            background: "transparent",
-            border: "none",
-            margin: "0px",
-            width: "100vw",
-            height: "100vh",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
+        <button
+          style={{ padding: "5px 10px" }}
+          onClick={() => window.open("/orders/create", "_blank")}
         >
-          {(close) => (
-            <AddShipmentForm onClose={close} onShipmentAdded={fetchShipments} />
-          )}
-        </Popup>
+          Add Order
+        </button>
       </ShipmentsContainerMenuContainer>
 
       <ShipmentsContainerContentContainer>
