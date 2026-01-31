@@ -2,16 +2,10 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { FiTrash2 } from "react-icons/fi";
+import { toast } from "react-toastify";
+
 import {
   FormWrapper,
-  Title,
-  SmallInput,
-  PrimaryButton,
-  SecondaryButton,
-  DangerButton,
-  ButtonRow,
-  DateContainer,
-  ProductRow,
   Input,
   FromBox,
   PreviewBox,
@@ -22,11 +16,24 @@ import {
   FormContentContainerSecondRow,
   SecondRowContainer,
   SelectInput,
+  ProductRow,
+  DateContainer,
+  PrimaryButton,
+  SecondaryButton,
+  DangerButton,
+  ButtonRow,
 } from "./styledComponents";
 
 const AddShipmentForm = ({ onClose, onShipmentAdded }) => {
+  const token = Cookies.get("saFruitsToken");
+
   const [useCustomDate, setUseCustomDate] = useState(false);
   const [useTransportCompany, setUseTransportCompany] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [errors, setErrors] = useState({});
+  const [productsData, setProductsData] = useState([]);
+
   const [newProduct, setNewProduct] = useState({
     productName: "",
     categoryName: "",
@@ -34,108 +41,110 @@ const AddShipmentForm = ({ onClose, onShipmentAdded }) => {
     priceAtShipment: "",
   });
 
-  const [productsData, setProductsData] = useState([]); // API response
   const [formData, setFormData] = useState({
     vehicleNumber: "",
     transportCompany: "",
     city: "",
     shipmentDate: "",
-    products: [
-      { productName: "", categoryName: "", quantity: "", priceAtShipment: "" },
-    ],
+    products: [],
   });
 
-  const token = Cookies.get("saFruitsToken");
-
-  // Fetch products + categories once
+  /* ---------------- FETCH PRODUCTS ---------------- */
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const { data } = await axios.get(
           "https://backend-zmoa.onrender.com/products/allNamesAndCategories",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } },
         );
         setProductsData(data);
-      } catch (error) {
-        console.error("Failed to fetch products", error);
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to load products");
       }
     };
     fetchProducts();
   }, [token]);
 
+  /* ---------------- VALIDATION ---------------- */
+  const validateNewProduct = () => {
+    const err = {};
+
+    if (!newProduct.productName) err.productName = "Product is required";
+
+    if (!newProduct.quantity || Number(newProduct.quantity) <= 0)
+      err.quantity = "Quantity must be greater than 0";
+
+    if (!newProduct.priceAtShipment || Number(newProduct.priceAtShipment) <= 0)
+      err.priceAtShipment = "Price must be greater than 0";
+
+    setErrors(err);
+    return Object.keys(err).length === 0;
+  };
+
+  const validateShipment = () => {
+    const err = {};
+
+    if (!formData.vehicleNumber)
+      err.vehicleNumber = "Vehicle number is required";
+
+    if (!formData.city) err.city = "City is required";
+
+    if (formData.products.length < 1)
+      err.products = "At least one product is required";
+
+    setErrors(err);
+    return Object.keys(err).length === 0;
+  };
+
+  /* ---------------- HANDLERS ---------------- */
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((p) => ({ ...p, [name]: value }));
+    setErrors((p) => ({ ...p, [name]: null }));
   };
 
   const handleNewProductChange = (e) => {
     const { name, value } = e.target;
-    setNewProduct((prev) => ({ ...prev, [name]: value }));
+    setNewProduct((p) => ({ ...p, [name]: value }));
+    setErrors((p) => ({ ...p, [name]: null }));
 
-    // Reset category if product changes
-    if (name === "productName")
-      setNewProduct((prev) => ({ ...prev, categoryName: "" }));
+    if (name === "productName") {
+      setNewProduct((p) => ({ ...p, categoryName: "" }));
+    }
   };
 
   const addNewProductToList = () => {
-    if (
-      !newProduct.productName ||
-      !newProduct.quantity ||
-      !newProduct.priceAtShipment
-    ) {
-      alert("Please fill all required fields");
-      return;
-    }
+    if (!validateNewProduct()) return;
 
-    setFormData((prev) => ({
-      ...prev,
-      products: [...prev.products, newProduct],
+    setFormData((p) => ({
+      ...p,
+      products: [...p.products, newProduct],
     }));
 
-    // Reset new product inputs
     setNewProduct({
       productName: "",
       categoryName: "",
       quantity: "",
       priceAtShipment: "",
     });
-  };
 
-  const handleProductChange = (index, e) => {
-    const { name, value } = e.target;
-    const updatedProducts = [...formData.products];
-    updatedProducts[index][name] = value;
-
-    // Reset category if product changes
-    if (name === "productName") updatedProducts[index].categoryName = "";
-
-    setFormData((prev) => ({ ...prev, products: updatedProducts }));
-  };
-
-  const addProductRow = () => {
-    setFormData((prev) => ({
-      ...prev,
-      products: [
-        ...prev.products,
-        {
-          productName: "",
-          categoryName: "",
-          quantity: "",
-          priceAtShipment: "",
-        },
-      ],
-    }));
+    setErrors({});
   };
 
   const removeProductRow = (index) => {
-    const updatedProducts = formData.products.filter((_, i) => i !== index);
-    setFormData((prev) => ({ ...prev, products: updatedProducts }));
+    setFormData((p) => ({
+      ...p,
+      products: p.products.filter((_, i) => i !== index),
+    }));
   };
 
+  /* ---------------- SUBMIT ---------------- */
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateShipment()) return;
+
+    setIsSubmitting(true);
 
     const payload = {
       vehicleNumber: formData.vehicleNumber,
@@ -165,45 +174,68 @@ const AddShipmentForm = ({ onClose, onShipmentAdded }) => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
+      toast.success("Shipment created successfully");
+
       if (onShipmentAdded) onShipmentAdded();
+
+      setFormData({
+        vehicleNumber: "",
+        transportCompany: "",
+        city: "",
+        shipmentDate: "",
+        products: [],
+      });
+
+      setNewProduct({
+        productName: "",
+        categoryName: "",
+        quantity: "",
+        priceAtShipment: "",
+      });
+
+      setUseCustomDate(false);
+      setUseTransportCompany(false);
+      setErrors({});
       onClose();
-    } catch (error) {
-      console.error("Error creating shipment:", error);
-      alert("Failed to create shipment");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to create shipment");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  /* ---------------- UI ---------------- */
   return (
     <FormWrapper onSubmit={handleSubmit}>
       <FromBox>
         <FormContentContainer>
           <FormContentContainerFirstRow>
             <InputContainer>
-              <InputLabel htmlFor="vehicleNumber">Vehicle Number :</InputLabel>
+              <InputLabel>Vehicle Number :</InputLabel>
               <Input
-                id="vehicleNumber"
                 name="vehicleNumber"
-                placeholder="Vehicle Number"
                 value={formData.vehicleNumber}
                 onChange={handleChange}
-                required={true}
               />
+              {errors.vehicleNumber && <small>{errors.vehicleNumber}</small>}
             </InputContainer>
+
             <InputContainer>
-              <InputLabel htmlFor="city">City :</InputLabel>
+              <InputLabel>City :</InputLabel>
               <Input
-                id="city"
                 name="city"
-                placeholder="city"
                 value={formData.city}
                 onChange={handleChange}
-                required
               />
+              {errors.city && <small>{errors.city}</small>}
             </InputContainer>
           </FormContentContainerFirstRow>
+
+          {/* TRANSPORT + DATE */}
           <FormContentContainerSecondRow>
             <SecondRowContainer>
               {!useTransportCompany ? (
@@ -216,13 +248,9 @@ const AddShipmentForm = ({ onClose, onShipmentAdded }) => {
               ) : (
                 <DateContainer>
                   <InputContainer>
-                    <InputLabel htmlFor="transportCompany">
-                      Transport Company :
-                    </InputLabel>
+                    <InputLabel>Transport Company :</InputLabel>
                     <Input
-                      id="transportCompany"
                       name="transportCompany"
-                      placeholder="Transport Company"
                       value={formData.transportCompany}
                       onChange={handleChange}
                     />
@@ -231,8 +259,8 @@ const AddShipmentForm = ({ onClose, onShipmentAdded }) => {
                     type="button"
                     onClick={() => {
                       setUseTransportCompany(false);
-                      setFormData((prev) => ({
-                        ...prev,
+                      setFormData((p) => ({
+                        ...p,
                         transportCompany: "",
                       }));
                     }}
@@ -242,6 +270,7 @@ const AddShipmentForm = ({ onClose, onShipmentAdded }) => {
                 </DateContainer>
               )}
             </SecondRowContainer>
+
             <SecondRowContainer>
               {!useCustomDate ? (
                 <SecondaryButton
@@ -253,24 +282,19 @@ const AddShipmentForm = ({ onClose, onShipmentAdded }) => {
               ) : (
                 <DateContainer>
                   <InputContainer>
-                    <InputLabel htmlFor="shipmentDate">
-                      Shipment Date :
-                    </InputLabel>
+                    <InputLabel>Shipment Date :</InputLabel>
                     <Input
                       type="datetime-local"
-                      id="shipmentDate"
                       name="shipmentDate"
-                      placeholder="Transport Company"
                       value={formData.shipmentDate}
                       onChange={handleChange}
                     />
                   </InputContainer>
-
                   <DangerButton
                     type="button"
                     onClick={() => {
                       setUseCustomDate(false);
-                      setFormData((prev) => ({ ...prev, shipmentDate: "" }));
+                      setFormData((p) => ({ ...p, shipmentDate: "" }));
                     }}
                   >
                     <FiTrash2 size={18} />
@@ -281,12 +305,11 @@ const AddShipmentForm = ({ onClose, onShipmentAdded }) => {
           </FormContentContainerSecondRow>
         </FormContentContainer>
 
-        {/* Optional Transport Company */}
+        {/* PRODUCT INPUT */}
         <ProductRow>
           <InputContainer>
-            <InputLabel htmlFor="productName">Product Name :</InputLabel>
+            <InputLabel>Product :</InputLabel>
             <SelectInput
-              id="productName"
               name="productName"
               value={newProduct.productName}
               onChange={handleNewProductChange}
@@ -298,27 +321,21 @@ const AddShipmentForm = ({ onClose, onShipmentAdded }) => {
                 </option>
               ))}
             </SelectInput>
+            {errors.productName && <small>{errors.productName}</small>}
           </InputContainer>
+
           <InputContainer>
-            <InputLabel htmlFor="categoryName">Category Name :</InputLabel>
+            <InputLabel>Category :</InputLabel>
             <SelectInput
-              id="categoryName"
               name="categoryName"
               value={newProduct.categoryName}
               onChange={handleNewProductChange}
-              disabled={
-                !newProduct.productName ||
-                !(
-                  productsData.find(
-                    (p) => p.productName === newProduct.productName
-                  )?.categories.length > 0
-                )
-              }
+              disabled={!newProduct.productName}
             >
-              <option value="">Select Category (optional)</option>
+              <option value="">Optional</option>
               {(
                 productsData.find(
-                  (p) => p.productName === newProduct.productName
+                  (p) => p.productName === newProduct.productName,
                 )?.categories || []
               ).map((c) => (
                 <option key={c} value={c}>
@@ -327,29 +344,27 @@ const AddShipmentForm = ({ onClose, onShipmentAdded }) => {
               ))}
             </SelectInput>
           </InputContainer>
+
           <InputContainer>
-            <InputLabel htmlFor="quantity">Quantity :</InputLabel>
+            <InputLabel>Quantity :</InputLabel>
             <Input
-              id="quantity"
-              name="quantity"
               type="number"
-              placeholder="Quantity"
-              min="1"
+              name="quantity"
               value={newProduct.quantity}
               onChange={handleNewProductChange}
             />
+            {errors.quantity && <small>{errors.quantity}</small>}
           </InputContainer>
+
           <InputContainer>
-            <InputLabel htmlFor="priceAtShipment">Price :</InputLabel>
+            <InputLabel>Price :</InputLabel>
             <Input
-              id="priceAtShipment"
               type="number"
               name="priceAtShipment"
-              placeholder="Price at Shipment"
-              min="0"
               value={newProduct.priceAtShipment}
               onChange={handleNewProductChange}
             />
+            {errors.priceAtShipment && <small>{errors.priceAtShipment}</small>}
           </InputContainer>
 
           <SecondaryButton type="button" onClick={addNewProductToList}>
@@ -358,8 +373,11 @@ const AddShipmentForm = ({ onClose, onShipmentAdded }) => {
         </ProductRow>
       </FromBox>
 
+      {/* PREVIEW */}
       <PreviewBox>
         <h3>Added Products</h3>
+        {errors.products && <small>{errors.products}</small>}
+
         {formData.products.length === 0 ? (
           <p>No products added yet.</p>
         ) : (
@@ -368,22 +386,22 @@ const AddShipmentForm = ({ onClose, onShipmentAdded }) => {
               <tr>
                 <th>Product</th>
                 <th>Category</th>
-                <th>Quantity</th>
+                <th>Qty</th>
                 <th>Price</th>
-                <th>Remove</th>
+                <th />
               </tr>
             </thead>
             <tbody>
-              {formData.products.map((product, index) => (
-                <tr key={index}>
-                  <td>{product.productName || "-"}</td>
-                  <td>{product.categoryName || "-"}</td>
-                  <td>{product.quantity || "-"}</td>
-                  <td>{product.priceAtShipment || "-"}</td>
+              {formData.products.map((p, i) => (
+                <tr key={i}>
+                  <td>{p.productName}</td>
+                  <td>{p.categoryName || "-"}</td>
+                  <td>{p.quantity}</td>
+                  <td>{p.priceAtShipment}</td>
                   <td>
                     <DangerButton
                       type="button"
-                      onClick={() => removeProductRow(index)}
+                      onClick={() => removeProductRow(i)}
                     >
                       <FiTrash2 size={16} />
                     </DangerButton>
@@ -393,15 +411,20 @@ const AddShipmentForm = ({ onClose, onShipmentAdded }) => {
             </tbody>
           </table>
         )}
+
         <ButtonRow>
-          <PrimaryButton type="submit">Create Shipment</PrimaryButton>
+          <PrimaryButton
+            type="submit"
+            disabled={isSubmitting || formData.products.length < 1}
+          >
+            {isSubmitting ? "Creating..." : "Create Shipment"}
+          </PrimaryButton>
+
           <SecondaryButton type="button" onClick={onClose}>
             Cancel
           </SecondaryButton>
         </ButtonRow>
       </PreviewBox>
-
-      {/* Vehicle Number */}
     </FormWrapper>
   );
 };

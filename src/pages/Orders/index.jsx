@@ -218,9 +218,7 @@ const Shipments = () => {
           Download Excel
         </button>
         <Popup
-          trigger={
-            <button style={{ padding: "5px 10px" }}>Add Shipment</button>
-          }
+          trigger={<button style={{ padding: "5px 10px" }}>Add Order</button>}
           modal
           nested
           contentStyle={{

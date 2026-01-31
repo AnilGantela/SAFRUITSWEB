@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAppContext } from "../../context/AppContext";
 import Popup from "reactjs-popup";
 import AddShipmentForm from "../../components/AddShipmentForm";
+import ShipmentDetailView from "../../components/ShipmentDetailView";
 import {
   format,
   startOfWeek,
@@ -25,7 +26,6 @@ import {
   ShipmentTableHeadTitle,
   ShipmentTableRow,
 } from "./styledComponents";
-import ShipmentDetailView from "../../components/ShipmentDetailView";
 
 const Shipments = () => {
   const { state } = useAppContext();
@@ -49,15 +49,18 @@ const Shipments = () => {
         "https://backend-zmoa.onrender.com/shipments/",
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       if (response.data && Array.isArray(response.data)) {
-        // Convert shipmentDate to Date object
-        const shipmentsWithDate = response.data.map((ship) => ({
-          ...ship,
-          date: new Date(ship.shipmentDate),
-        }));
+        const shipmentsWithDate = response.data
+          .map((ship) => ({
+            ...ship,
+            date: new Date(ship.shipmentDate),
+          }))
+          // Sort latest first
+          .sort((a, b) => b.date - a.date);
+
         setAllShipments(shipmentsWithDate);
       }
     } catch (error) {
@@ -79,7 +82,7 @@ const Shipments = () => {
     // City filter
     if (state.city && state.city !== "none") {
       filtered = filtered.filter(
-        (ship) => ship.city?.toLowerCase() === state.city.toLowerCase()
+        (ship) => ship.city?.toLowerCase() === state.city.toLowerCase(),
       );
     }
 
@@ -88,21 +91,21 @@ const Shipments = () => {
     switch (dateFilter) {
       case "today":
         filtered = filtered.filter(
-          (ship) => ship.date.toDateString() === today.toDateString()
+          (ship) => ship.date.toDateString() === today.toDateString(),
         );
         break;
       case "lastWeek":
         const weekStart = startOfWeek(today);
         const weekEnd = endOfWeek(today);
         filtered = filtered.filter(
-          (ship) => ship.date >= weekStart && ship.date <= weekEnd
+          (ship) => ship.date >= weekStart && ship.date <= weekEnd,
         );
         break;
       case "fullMonth":
         const monthStart = startOfMonth(today);
         const monthEnd = endOfMonth(today);
         filtered = filtered.filter(
-          (ship) => ship.date >= monthStart && ship.date <= monthEnd
+          (ship) => ship.date >= monthStart && ship.date <= monthEnd,
         );
         break;
       case "pastSixMonths":
@@ -116,7 +119,7 @@ const Shipments = () => {
           const fromDate = new Date(customRange.from);
           const toDate = new Date(customRange.to);
           filtered = filtered.filter(
-            (ship) => ship.date >= fromDate && ship.date <= toDate
+            (ship) => ship.date >= fromDate && ship.date <= toDate,
           );
         }
         break;
@@ -130,28 +133,32 @@ const Shipments = () => {
 
   const currentShipments = filteredShipments.slice(
     (page - 1) * limit,
-    page * limit
+    page * limit,
   );
 
   const handlePrev = () => setPage((prev) => Math.max(prev - 1, 1));
   const handleNext = () => setPage((prev) => Math.min(prev + 1, totalPages));
 
-  // Export current page to Excel
+  // Export all filtered shipments to Excel
   const exportToExcel = () => {
-    const wsData = currentShipments.map((ship) => ({
-      "Shipment ID": ship._id,
+    const wsData = filteredShipments.map((ship, index) => ({
+      "S.No": index + 1, // continuous numbering
       City: ship.city,
-      Customer: ship.customerName,
+      Customer: ship.transportCompany || "-",
       Quantity: ship.quantity,
+      Vehicle: ship.vehicleNumber,
       Date: format(ship.date, "yyyy-MM-dd"),
-      "Orders Count": ship.orders?.length || 0,
-      "Products Count": ship.products?.length || 0,
+      "P C": ship.products?.length || 0,
+      "Shipment Link": `https://safruitsweb.vercel.app/shipments/${ship._id}`,
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(wsData);
     const workbook = XLSX.utils.book_new();
+    const today = new Date();
+    const formattedDate = today.toISOString().split("T")[0]; // yyyy-mm-dd
+
     XLSX.utils.book_append_sheet(workbook, worksheet, "Shipments");
-    XLSX.writeFile(workbook, "shipments.xlsx");
+    XLSX.writeFile(workbook, `shipments_${formattedDate}.xlsx`);
   };
 
   return (
@@ -159,6 +166,7 @@ const Shipments = () => {
       <ShipmentsContainerHeaderContainer>
         <h1>Shipments : {state.city !== "none" ? state.city : ""}</h1>
       </ShipmentsContainerHeaderContainer>
+
       <ShipmentsContainerMenuContainer>
         <label>
           Items per page:&nbsp;
@@ -173,6 +181,7 @@ const Shipments = () => {
             ))}
           </select>
         </label>
+
         <label>
           Date Filter:&nbsp;
           <select
@@ -188,6 +197,7 @@ const Shipments = () => {
             <option value="custom">Custom Range</option>
           </select>
         </label>
+
         {dateFilter === "custom" && (
           <div>
             <input
@@ -207,9 +217,11 @@ const Shipments = () => {
             />
           </div>
         )}
+
         <button onClick={exportToExcel} style={{ padding: "5px 10px" }}>
           Download Excel
         </button>
+
         <Popup
           trigger={
             <button style={{ padding: "5px 10px" }}>Add Shipment</button>
@@ -247,6 +259,7 @@ const Shipments = () => {
               <ShipmentTableHeadTitle>Orders</ShipmentTableHeadTitle>
             </ShipmentTableRow>
           </ShipmentTableHeader>
+
           <tbody>
             {loading ? (
               <tr>
@@ -275,7 +288,9 @@ const Shipments = () => {
                       $bColor={state.colors.secondary}
                       style={{ cursor: "pointer" }}
                     >
-                      <ShipmentTableDataCell>{index + 1}</ShipmentTableDataCell>
+                      <ShipmentTableDataCell>
+                        {(page - 1) * limit + index + 1} {/* continuous S.No */}
+                      </ShipmentTableDataCell>
                       <ShipmentTableDataCell>
                         {ship.city || "none"}
                       </ShipmentTableDataCell>
@@ -291,18 +306,17 @@ const Shipments = () => {
                       <ShipmentTableDataCell>
                         {ship.products.reduce(
                           (total, product) => total + product.quantity,
-                          0
+                          0,
                         )}
                       </ShipmentTableDataCell>
                       <ShipmentTableDataCell>
                         {ship.products.reduce(
                           (total, product) =>
                             total + product.quantity * product.priceAtShipment,
-                          0
+                          0,
                         )}
                       </ShipmentTableDataCell>
                       <ShipmentTableDataCell>
-                        {" "}
                         {ship.orders?.length || 0}
                       </ShipmentTableDataCell>
                     </ShipmentTableRow>

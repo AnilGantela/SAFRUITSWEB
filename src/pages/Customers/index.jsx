@@ -1,53 +1,151 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import Cookies from "js-cookie";
+import axios from "axios";
+import Popup from "reactjs-popup";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+import AddCustomerForm from "../../components/AddCustomerForm"; // adjust path
+import {
+  CustomersContainer,
+  CustomersHeader,
+  CustomersTable,
+  CustomerTableHeader,
+  CustomerTableRow,
+  CustomerTableHeadTitle,
+  CustomerTableDataCell,
+} from "./styledComponents";
 
 const Customers = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const customers = [
-    { id: 1, name: "John Doe", email: "john@example.com" },
-    { id: 2, name: "Jane Smith", email: "jane@example.com" },
-    { id: 3, name: "Alice Johnson", email: "alice@example.com" },
-  ];
+  const [customers, setCustomers] = useState([]);
+
+  const fetchCustomers = async () => {
+    try {
+      const token = Cookies.get("saFruitsToken");
+      const response = await axios.get(
+        "https://backend-zmoa.onrender.com/customers/",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      if (response.data && Array.isArray(response.data)) {
+        setCustomers(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching customers:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
 
   const filteredCustomers = customers.filter((customer) =>
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase())
+    customer.customerName.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
-    <div>
-      <h1>Customer List</h1>
-      <input
-        type="text"
-        placeholder="Search by name"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        style={{ marginBottom: "10px", padding: "5px", width: "200px" }}
-      />
-      <table border="1" style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Email</th>
-          </tr>
-        </thead>
+    <CustomersContainer>
+      <ToastContainer position="top-right" autoClose={3000} />
+      <CustomersHeader
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "10px",
+          flexWrap: "wrap",
+        }}
+      >
+        <h1>Customers</h1>
+
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <input
+            type="text"
+            placeholder="Search by name"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ padding: "5px", width: "200px" }}
+          />
+
+          {/* Popup for adding customer */}
+          <Popup
+            trigger={
+              <button style={{ padding: "5px 10px" }}>Add Customer</button>
+            }
+            modal
+            nested
+            closeOnDocumentClick={true} // closes when clicking outside
+            closeOnEscape={true} // closes when pressing ESC
+            contentStyle={{
+              background: "transparent",
+              border: "none",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              margin: 0,
+              width: "100vw",
+              height: "100vh",
+            }}
+          >
+            {(close) => (
+              <AddCustomerForm
+                onClose={close}
+                onCustomerAdded={fetchCustomers}
+              />
+            )}
+          </Popup>
+        </div>
+      </CustomersHeader>
+
+      <CustomersTable>
+        <CustomerTableHeader>
+          <CustomerTableRow>
+            <CustomerTableHeadTitle>S.No</CustomerTableHeadTitle>
+            <CustomerTableHeadTitle>Name</CustomerTableHeadTitle>
+            <CustomerTableHeadTitle>Email</CustomerTableHeadTitle>
+            <CustomerTableHeadTitle>Phone Number</CustomerTableHeadTitle>
+            <CustomerTableHeadTitle>Pending Amount</CustomerTableHeadTitle>
+            <CustomerTableHeadTitle>Orders</CustomerTableHeadTitle>
+            <CustomerTableHeadTitle>City</CustomerTableHeadTitle>
+          </CustomerTableRow>
+        </CustomerTableHeader>
+
         <tbody>
-          {filteredCustomers.map((customer) => (
-            <tr key={customer.id}>
-              <td>{customer.id}</td>
-              <td>{customer.name}</td>
-              <td>{customer.email}</td>
-            </tr>
-          ))}
-          {filteredCustomers.length === 0 && (
+          {filteredCustomers.length === 0 ? (
             <tr>
-              <td colSpan="3" style={{ textAlign: "center" }}>
+              <td colSpan="7" style={{ textAlign: "center" }}>
                 No customers found
               </td>
             </tr>
+          ) : (
+            filteredCustomers.map((customer, index) => (
+              <CustomerTableRow key={index}>
+                <CustomerTableDataCell>{index + 1}</CustomerTableDataCell>
+                <CustomerTableDataCell>
+                  {customer.customerName}
+                </CustomerTableDataCell>
+                <CustomerTableDataCell>
+                  {customer.email || "n/a"}
+                </CustomerTableDataCell>
+                <CustomerTableDataCell>
+                  {customer.phoneNumber}
+                </CustomerTableDataCell>
+                <CustomerTableDataCell>
+                  {customer.pendingAmount || 0}
+                </CustomerTableDataCell>
+                <CustomerTableDataCell>
+                  {customer.orders?.length || 0}
+                </CustomerTableDataCell>
+                <CustomerTableDataCell>
+                  {customer.city || "n/a"}
+                </CustomerTableDataCell>
+              </CustomerTableRow>
+            ))
           )}
         </tbody>
-      </table>
-    </div>
+      </CustomersTable>
+    </CustomersContainer>
   );
 };
 
