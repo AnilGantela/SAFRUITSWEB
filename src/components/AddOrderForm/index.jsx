@@ -3,6 +3,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useAppContext } from "../../context/AppContext";
 
 import {
   OrderContainer,
@@ -14,26 +15,49 @@ import {
   Button,
   CustomerInfo,
   ShipmentSelect,
-} from "./styledComponents"; // Adjust path
+  OrderTable,
+  OrderTH,
+  OrderTD,
+  QtyInput,
+  RemoveBtn,
+} from "./styledComponents";
+
+/* ---------------- HELPERS ---------------- */
+
+const formatDate = (dateStr) => {
+  const d = new Date(dateStr);
+  return `${String(d.getDate()).padStart(2, "0")}-${String(
+    d.getMonth() + 1,
+  ).padStart(2, "0")}-${String(d.getFullYear()).slice(-2)}`;
+};
+
+const getOrderedQty = (addedProducts, shipmentId, productName, categoryName) =>
+  addedProducts
+    .filter(
+      (p) =>
+        p.shipmentId === shipmentId &&
+        p.productName.toLowerCase() === productName.toLowerCase() &&
+        (p.categoryName || "") === (categoryName || ""),
+    )
+    .reduce((sum, p) => sum + p.quantity, 0);
+
+/* ---------------- COMPONENT ---------------- */
 
 const CreateOrder = () => {
   const [customerNumber, setCustomerNumber] = useState("");
   const [customerDetails, setCustomerDetails] = useState(null);
   const [city, setCity] = useState("");
-  const [cities] = useState([
-    "Tokyo",
-    "Paris",
-    "Sydney",
-    "Vijayawada",
-    "Guntur",
-  ]);
+  const { state } = useAppContext();
+  const cities = state.cities;
 
   const [products, setProducts] = useState([
     {
       productName: "",
-      shipmentId: "",
       categoryName: "",
+      shipmentId: "",
       quantity: 1,
+      soldPrice: 0,
+      priceAtShipment: 0,
       shipments: [],
       categories: [],
     },
@@ -44,172 +68,174 @@ const CreateOrder = () => {
 
   const token = Cookies.get("saFruitsToken");
 
-  // Fetch customer details by phone number
+  /* -------- FETCH CUSTOMER -------- */
+
   useEffect(() => {
-    const fetchCustomer = async () => {
-      if (customerNumber.length === 10) {
-        try {
-          const res = await axios.get(
-            `https://backend-zmoa.onrender.com/customers/phone/${customerNumber}`,
-            { headers: { Authorization: `Bearer ${token}` } },
-          );
-          setCustomerDetails(res.data);
-          if (res.data.city) setCity(res.data.city);
-        } catch (error) {
-          setCustomerDetails(null);
-          toast.error("Customer not found");
-        }
-      } else {
-        setCustomerDetails(null);
-      }
-    };
-    fetchCustomer();
-  }, [customerNumber, token]);
-
-  // Handle product input change
-  const handleProductChange = (index, field, value) => {
-    const newProducts = [...products];
-    newProducts[index][field] = value;
-    if (field === "productName" || field === "categoryName") {
-      newProducts[index].shipmentId = "";
-    }
-    setProducts(newProducts);
-  };
-
-  // Search shipments for product
-  const handleSearchShipments = async (index) => {
-    const prod = products[index];
-    const productName = prod.productName.trim();
-    if (!productName) {
-      toast.error("Enter product name first");
+    if (customerNumber.length !== 10) {
+      setCustomerDetails(null);
       return;
     }
 
+    axios
+      .get(
+        `https://backend-zmoa.onrender.com/customers/phone/${customerNumber}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      )
+      .then((res) => {
+        setCustomerDetails(res.data);
+        if (res.data.city) setCity(res.data.city);
+      })
+      .catch(() => {
+        setCustomerDetails(null);
+        toast.error("Customer not found");
+      });
+  }, [customerNumber, token]);
+
+  /* -------- PRODUCT SEARCH -------- */
+
+  const handleSearchShipments = async (index) => {
+    const prod = products[index];
+    if (!prod.productName.trim()) return toast.error("Enter product name");
+
     try {
       const res = await axios.get(
-        `https://backend-zmoa.onrender.com/shipments/product/${productName}`,
+        `https://backend-zmoa.onrender.com/shipments/product/${prod.productName}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      const newProducts = [...products];
       const shipments = res.data.filter((s) =>
-        s.products.some((p) => {
-          const productMatch =
-            p.productName.toLowerCase() === productName.toLowerCase();
-          return productMatch && p.remainingQuantity > 0;
+        s.products.some(
+          (p) =>
+            p.productName.toLowerCase() === prod.productName.toLowerCase() &&
+            p.remainingQuantity > 0,
+        ),
+      );
+
+      const categories = new Set();
+      shipments.forEach((s) =>
+        s.products.forEach((p) => {
+          if (
+            p.productName.toLowerCase() === prod.productName.toLowerCase() &&
+            p.remainingQuantity > 0 &&
+            p.categoryName
+          ) {
+            categories.add(p.categoryName);
+          }
         }),
       );
 
-      if (shipments.length === 0) {
-        toast.error("No shipments found for this product");
-        newProducts[index].shipments = [];
-        newProducts[index].categories = [];
-      } else {
-        newProducts[index].shipments = shipments;
+      const updated = [...products];
+      updated[index].shipments = shipments;
+      updated[index].categories = [...categories];
+      updated[index].shipmentId =
+        shipments.length === 1 ? shipments[0]._id : "";
+      updated[index].priceAtShipment =
+        shipments.length === 1
+          ? shipments[0].products.find(
+              (p) =>
+                p.productName.toLowerCase() ===
+                  prod.productName.toLowerCase() &&
+                (!prod.categoryName ||
+                  p.categoryName?.toLowerCase() ===
+                    prod.categoryName.toLowerCase()),
+            )?.priceAtShipment || 0
+          : 0;
 
-        const categoriesSet = new Set();
-        shipments.forEach((s) =>
-          s.products.forEach((p) => {
-            const productMatch =
-              p.productName.toLowerCase() === productName.toLowerCase();
-            if (productMatch && p.remainingQuantity > 0 && p.categoryName) {
-              categoriesSet.add(p.categoryName);
-            }
-          }),
-        );
-        newProducts[index].categories = Array.from(categoriesSet);
-
-        // If only one shipment exists, preselect it
-        if (shipments.length === 1) {
-          newProducts[index].shipmentId = shipments[0]._id;
-        }
-      }
-
-      setProducts(newProducts);
-    } catch (error) {
+      setProducts(updated);
+    } catch {
       toast.error("Error fetching shipments");
     }
   };
 
-  // Add product to table
+  /* -------- ADD PRODUCT -------- */
+
   const handleAddProduct = (index) => {
     const prod = products[index];
-    if (!prod.shipmentId) {
-      toast.error("Select a shipment first");
-      return;
-    }
+    if (!prod.shipmentId) return toast.error("Select shipment");
+    if (!prod.soldPrice || prod.soldPrice <= 0)
+      return toast.error("Enter a valid sold price");
 
-    const selectedShipment = prod.shipments.find(
-      (s) => s._id === prod.shipmentId,
+    const shipment = prod.shipments.find((s) => s._id === prod.shipmentId);
+    const shipmentProduct = shipment.products.find(
+      (p) =>
+        p.productName.toLowerCase() === prod.productName.toLowerCase() &&
+        (!prod.categoryName ||
+          p.categoryName?.toLowerCase() === prod.categoryName.toLowerCase()),
     );
-    if (!selectedShipment) {
-      toast.error("Invalid shipment selected");
-      return;
-    }
 
-    const shipmentProduct = selectedShipment.products.find((p) => {
-      const productMatch =
-        p.productName.toLowerCase() === prod.productName.toLowerCase();
-      const categoryMatch = prod.categoryName
-        ? p.categoryName?.toLowerCase() === prod.categoryName.toLowerCase()
-        : true; // no category selected
-      return productMatch && categoryMatch;
+    const orderedQty = getOrderedQty(
+      addedProducts,
+      shipment._id,
+      prod.productName,
+      prod.categoryName,
+    );
+
+    const availableQty = shipmentProduct.remainingQuantity - orderedQty;
+    if (prod.quantity > availableQty)
+      return toast.error(`Only ${availableQty} available`);
+
+    setAddedProducts((prev) => {
+      const existing = prev.find(
+        (p) =>
+          p.shipmentId === shipment._id &&
+          p.productName === prod.productName &&
+          (p.categoryName || "") === (prod.categoryName || ""),
+      );
+
+      if (existing) {
+        return prev.map((p) =>
+          p === existing
+            ? {
+                ...p,
+                quantity: p.quantity + prod.quantity,
+                remainingQuantity: availableQty - prod.quantity,
+              }
+            : p,
+        );
+      }
+
+      return [
+        ...prev,
+        {
+          productName: prod.productName,
+          categoryName: prod.categoryName,
+          shipmentId: shipment._id,
+          vehicleNumber: shipment.vehicleNumber,
+          shipmentDate: shipment.shipmentDate,
+          quantity: prod.quantity,
+          soldPrice: prod.soldPrice,
+          priceAtShipment: shipmentProduct.priceAtShipment,
+          maxQuantity: availableQty,
+          remainingQuantity: availableQty - prod.quantity,
+        },
+      ];
     });
 
-    if (!shipmentProduct) {
-      toast.error("Invalid shipment selection");
-      return;
-    }
-
-    if (prod.quantity > shipmentProduct.remainingQuantity) {
-      toast.error(
-        `Quantity cannot exceed remaining quantity (${shipmentProduct.remainingQuantity})`,
-      );
-      return;
-    }
-
-    setAddedProducts((prev) => [
-      ...prev,
-      {
-        productName: prod.productName,
-        categoryName: prod.categoryName,
-        quantity: prod.quantity,
-        shipmentId: prod.shipmentId,
-        remainingQuantity: shipmentProduct.remainingQuantity,
-      },
-    ]);
-
-    // Reset product row
-    const newProducts = [...products];
-    newProducts[index] = {
-      productName: "",
-      shipmentId: "",
-      categoryName: "",
-      quantity: 1,
-      shipments: [],
-      categories: [],
-    };
-    setProducts(newProducts);
+    setProducts((prev) =>
+      prev.map((p, i) =>
+        i === index
+          ? {
+              productName: "",
+              categoryName: "",
+              shipmentId: "",
+              quantity: 1,
+              soldPrice: 0,
+              priceAtShipment: 0,
+              shipments: [],
+              categories: [],
+            }
+          : p,
+      ),
+    );
   };
 
-  // Submit order
+  /* -------- SUBMIT ORDER -------- */
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!customerNumber.trim() || customerNumber.length < 10) {
-      toast.error("Customer phone number must be 10 digits");
-      return;
-    }
-
-    if (!city.trim()) {
-      toast.error("City is required");
-      return;
-    }
-
-    if (!addedProducts.length) {
-      toast.error("Add at least one product");
-      return;
-    }
+    if (!addedProducts.length) return toast.error("Add products first");
 
     setLoading(true);
     try {
@@ -218,42 +244,30 @@ const CreateOrder = () => {
         { customerNumber, city, products: addedProducts },
         { headers: { Authorization: `Bearer ${token}` } },
       );
-      toast.success("Order created successfully!");
-      setCustomerNumber("");
-      setCustomerDetails(null);
-      setCity("");
-      setProducts([
-        {
-          productName: "",
-          shipmentId: "",
-          categoryName: "",
-          quantity: 1,
-          shipments: [],
-          categories: [],
-        },
-      ]);
+      toast.success("Order created");
       setAddedProducts([]);
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to create order");
+    } catch {
+      toast.error("Order failed");
     } finally {
       setLoading(false);
     }
   };
 
+  /* ---------------- RENDER ---------------- */
+
   return (
     <OrderContainer>
-      <ToastContainer position="top-right" autoClose={3000} />
+      <ToastContainer />
       <OrderHeader>Create Order</OrderHeader>
+
       <Form onSubmit={handleSubmit}>
         <FormRow>
           <FormInput
-            type="text"
-            placeholder="Customer Phone Number"
+            placeholder="Customer Phone"
             value={customerNumber}
             onChange={(e) =>
               setCustomerNumber(e.target.value.replace(/\D/g, "").slice(0, 10))
             }
-            maxLength={10}
           />
 
           <FormInput
@@ -263,9 +277,7 @@ const CreateOrder = () => {
           >
             <option value="">Select City</option>
             {cities.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
+              <option key={c}>{c}</option>
             ))}
           </FormInput>
         </FormRow>
@@ -273,8 +285,7 @@ const CreateOrder = () => {
         {customerDetails && (
           <CustomerInfo>
             <p>Name: {customerDetails.customerName}</p>
-            <p>Email: {customerDetails.email || "N/A"}</p>
-            <p>Pending Amount: {customerDetails.pendingAmount || 0}</p>
+            <p>Pending: {customerDetails.pendingAmount || 0}</p>
           </CustomerInfo>
         )}
 
@@ -282,13 +293,19 @@ const CreateOrder = () => {
           {products.map((prod, index) => (
             <FormRow key={index}>
               <FormInput
-                type="text"
                 placeholder="Product Name"
                 value={prod.productName}
                 onChange={(e) =>
-                  handleProductChange(index, "productName", e.target.value)
+                  setProducts((prev) =>
+                    prev.map((p, i) =>
+                      i === index
+                        ? { ...p, productName: e.target.value, shipmentId: "" }
+                        : p,
+                    ),
+                  )
                 }
               />
+
               <Button
                 type="button"
                 onClick={() => handleSearchShipments(index)}
@@ -301,14 +318,22 @@ const CreateOrder = () => {
                   as="select"
                   value={prod.categoryName}
                   onChange={(e) =>
-                    handleProductChange(index, "categoryName", e.target.value)
+                    setProducts((prev) =>
+                      prev.map((p, i) =>
+                        i === index
+                          ? {
+                              ...p,
+                              categoryName: e.target.value,
+                              shipmentId: "",
+                            }
+                          : p,
+                      ),
+                    )
                   }
                 >
                   <option value="">Select Category</option>
-                  {prod.categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
+                  {prod.categories.map((c) => (
+                    <option key={c}>{c}</option>
                   ))}
                 </FormInput>
               )}
@@ -316,99 +341,151 @@ const CreateOrder = () => {
               <ShipmentSelect
                 value={prod.shipmentId}
                 onChange={(e) =>
-                  handleProductChange(index, "shipmentId", e.target.value)
+                  setProducts((prev) =>
+                    prev.map((p, i) => {
+                      if (i === index) {
+                        const selectedShipment = p.shipments.find(
+                          (s) => s._id === e.target.value,
+                        );
+                        const shipmentProduct = selectedShipment?.products.find(
+                          (pr) =>
+                            pr.productName.toLowerCase() ===
+                              p.productName.toLowerCase() &&
+                            (!p.categoryName ||
+                              pr.categoryName?.toLowerCase() ===
+                                p.categoryName.toLowerCase()),
+                        );
+                        return {
+                          ...p,
+                          shipmentId: e.target.value,
+                          priceAtShipment:
+                            shipmentProduct?.priceAtShipment || 0,
+                        };
+                      }
+                      return p;
+                    }),
+                  )
                 }
               >
                 <option value="">Select Shipment</option>
-                {prod.shipments
-                  .filter((s) =>
-                    s.products.some((p) => {
-                      const productMatch =
-                        p.productName.toLowerCase() ===
-                        prod.productName.toLowerCase();
-                      const categoryMatch = prod.categoryName
-                        ? p.categoryName?.toLowerCase() ===
-                          prod.categoryName.toLowerCase()
-                        : true;
-                      return (
-                        productMatch && categoryMatch && p.remainingQuantity > 0
-                      );
-                    }),
-                  )
-                  .map((s) => {
-                    const p = s.products.find((p) => {
-                      const productMatch =
-                        p.productName.toLowerCase() ===
-                        prod.productName.toLowerCase();
-                      const categoryMatch = prod.categoryName
-                        ? p.categoryName?.toLowerCase() ===
-                          prod.categoryName.toLowerCase()
-                        : true;
-                      return productMatch && categoryMatch;
-                    });
-                    if (!p) return null;
-                    return (
-                      <option
-                        key={s._id}
-                        value={s._id}
-                        style={{
-                          color: p.remainingQuantity < 5 ? "red" : "black",
-                        }}
-                      >
-                        {s._id} - Remaining Qty: {p.remainingQuantity} -
-                        Category: {p.categoryName || "N/A"}
-                      </option>
-                    );
-                  })}
+                {prod.shipments.map((s) => {
+                  const shipmentProduct = s.products.find(
+                    (p) =>
+                      p.productName.toLowerCase() ===
+                        prod.productName.toLowerCase() &&
+                      (!prod.categoryName ||
+                        p.categoryName?.toLowerCase() ===
+                          prod.categoryName.toLowerCase()),
+                  );
+                  if (!shipmentProduct) return null;
+
+                  const orderedQty = getOrderedQty(
+                    addedProducts,
+                    s._id,
+                    prod.productName,
+                    prod.categoryName,
+                  );
+
+                  const availableQty =
+                    shipmentProduct.remainingQuantity - orderedQty;
+                  if (availableQty <= 0) return null;
+
+                  return (
+                    <option key={s._id} value={s._id}>
+                      {s.vehicleNumber} | {formatDate(s.shipmentDate)} |
+                      Remaining: {availableQty} | CP:{" "}
+                      {shipmentProduct.priceAtShipment}
+                    </option>
+                  );
+                })}
               </ShipmentSelect>
 
               <FormInput
                 type="number"
-                min={1}
-                placeholder="Quantity"
                 value={prod.quantity}
                 onChange={(e) =>
-                  handleProductChange(index, "quantity", Number(e.target.value))
+                  setProducts((prev) =>
+                    prev.map((p, i) =>
+                      i === index
+                        ? { ...p, quantity: Number(e.target.value) }
+                        : p,
+                    ),
+                  )
+                }
+              />
+
+              <FormInput
+                type="number"
+                step={0.01}
+                placeholder="Sold Price"
+                value={prod.soldPrice}
+                onChange={(e) =>
+                  setProducts((prev) =>
+                    prev.map((p, i) =>
+                      i === index
+                        ? { ...p, soldPrice: Number(e.target.value) }
+                        : p,
+                    ),
+                  )
                 }
               />
 
               <Button type="button" onClick={() => handleAddProduct(index)}>
-                Add to Order
+                Add
               </Button>
             </FormRow>
           ))}
         </ProductContainer>
 
         {addedProducts.length > 0 && (
-          <table border="1" style={{ width: "100%", marginTop: "20px" }}>
+          <OrderTable>
             <thead>
               <tr>
-                <th>Product Name</th>
-                <th>Category</th>
-                <th>Quantity</th>
-                <th>Shipment ID</th>
-                <th>Remaining Qty</th>
-                <th>Action</th>
+                <OrderTH>Product</OrderTH>
+                <OrderTH>Category</OrderTH>
+                <OrderTH>Shipment</OrderTH>
+                <OrderTH>Qty</OrderTH>
+                <OrderTH>CP</OrderTH>
+                <OrderTH>SP</OrderTH>
+                <OrderTH>Amount</OrderTH>
+                <OrderTH>Action</OrderTH>
               </tr>
             </thead>
             <tbody>
               {addedProducts.map((p, idx) => (
                 <tr key={idx}>
-                  <td>{p.productName}</td>
-                  <td>{p.categoryName || "N/A"}</td>
-                  <td>{p.quantity}</td>
-                  <td>{p.shipmentId}</td>
-                  <td
-                    style={{
-                      color: p.remainingQuantity < 5 ? "red" : "black",
-                      fontWeight: p.remainingQuantity < 5 ? "bold" : "normal",
-                    }}
-                  >
-                    {p.remainingQuantity}
-                  </td>
-                  <td>
-                    <button
-                      type="button"
+                  <OrderTD>{p.productName}</OrderTD>
+                  <OrderTD>{p.categoryName || "-"}</OrderTD>
+                  <OrderTD>
+                    {p.vehicleNumber} | {formatDate(p.shipmentDate)}
+                  </OrderTD>
+                  <OrderTD>
+                    <QtyInput
+                      type="number"
+                      min={1}
+                      max={p.maxQuantity}
+                      value={p.quantity}
+                      onChange={(e) =>
+                        setAddedProducts((prev) =>
+                          prev.map((x, i) =>
+                            i === idx
+                              ? {
+                                  ...x,
+                                  quantity: Number(e.target.value),
+                                  remainingQuantity:
+                                    x.maxQuantity - Number(e.target.value),
+                                }
+                              : x,
+                          ),
+                        )
+                      }
+                    />
+                  </OrderTD>
+                  <OrderTD>{p.priceAtShipment}</OrderTD>
+                  <OrderTD>{p.soldPrice.toFixed(2)}</OrderTD>
+                  <OrderTD>{(p.soldPrice * p.quantity).toFixed(2)}</OrderTD>
+                  <OrderTD>
+                    <RemoveBtn
                       onClick={() =>
                         setAddedProducts((prev) =>
                           prev.filter((_, i) => i !== idx),
@@ -416,16 +493,16 @@ const CreateOrder = () => {
                       }
                     >
                       Remove
-                    </button>
-                  </td>
+                    </RemoveBtn>
+                  </OrderTD>
                 </tr>
               ))}
             </tbody>
-          </table>
+          </OrderTable>
         )}
 
         <Button type="submit" disabled={loading}>
-          {loading ? "Creating Order..." : "Create Order"}
+          {loading ? "Creating..." : "Create Order"}
         </Button>
       </Form>
     </OrderContainer>

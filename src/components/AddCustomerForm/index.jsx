@@ -2,7 +2,9 @@ import React, { useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { toast } from "react-toastify";
+import { FiX } from "react-icons/fi";
 import "react-toastify/dist/ReactToastify.css";
+import { useAppContext } from "../../context/AppContext";
 
 import {
   FormContainer,
@@ -11,7 +13,8 @@ import {
   FormInput,
   ErrorText,
   SubmitButton,
-} from "./styledComponents"; // adjust path
+  CloseIcon,
+} from "./styledComponents";
 
 const AddCustomerForm = ({ onClose, onCustomerAdded }) => {
   const [customerData, setCustomerData] = useState({
@@ -20,6 +23,7 @@ const AddCustomerForm = ({ onClose, onCustomerAdded }) => {
     phoneNumber: "",
     city: "",
   });
+  const { state } = useAppContext();
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -28,13 +32,17 @@ const AddCustomerForm = ({ onClose, onCustomerAdded }) => {
     const newErrors = {};
     if (!customerData.customerName.trim())
       newErrors.customerName = "Name is required";
+
     if (!customerData.phoneNumber.trim())
       newErrors.phoneNumber = "Phone number is required";
     else if (!/^\d{10}$/.test(customerData.phoneNumber))
       newErrors.phoneNumber = "Phone number must be 10 digits";
+
     if (customerData.email && !/\S+@\S+\.\S+/.test(customerData.email))
       newErrors.email = "Email is invalid";
+
     if (!customerData.city.trim()) newErrors.city = "City is required";
+
     return newErrors;
   };
 
@@ -46,6 +54,7 @@ const AddCustomerForm = ({ onClose, onCustomerAdded }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -55,7 +64,8 @@ const AddCustomerForm = ({ onClose, onCustomerAdded }) => {
     setLoading(true);
     try {
       const token = Cookies.get("saFruitsToken");
-      const response = await axios.post(
+
+      await axios.post(
         "https://backend-zmoa.onrender.com/customers/create",
         customerData,
         {
@@ -67,10 +77,9 @@ const AddCustomerForm = ({ onClose, onCustomerAdded }) => {
       );
 
       toast.success("Customer added successfully!");
-      onCustomerAdded(); // refresh list
-      onClose(); // close popup
+      onCustomerAdded();
+      onClose();
     } catch (error) {
-      console.error("Error adding customer:", error);
       const msg = error.response?.data?.message || "Failed to add customer";
       toast.error(msg);
     } finally {
@@ -80,7 +89,11 @@ const AddCustomerForm = ({ onClose, onCustomerAdded }) => {
 
   return (
     <FormContainer onSubmit={handleSubmit}>
-      <FormTitle>Add Customer</FormTitle>
+      <CloseIcon onClick={onClose} $color={state.colors.primary}>
+        <FiX size={22} />
+      </CloseIcon>
+
+      <FormTitle $color={state.colors.primary}>Add Customer</FormTitle>
 
       <FormInputWrapper>
         <FormInput
@@ -89,6 +102,7 @@ const AddCustomerForm = ({ onClose, onCustomerAdded }) => {
           placeholder="Name"
           value={customerData.customerName}
           onChange={handleChange}
+          $color={state.colors.primary}
         />
         {errors.customerName && <ErrorText>{errors.customerName}</ErrorText>}
       </FormInputWrapper>
@@ -100,6 +114,7 @@ const AddCustomerForm = ({ onClose, onCustomerAdded }) => {
           placeholder="Email"
           value={customerData.email}
           onChange={handleChange}
+          $color={state.colors.primary}
         />
         {errors.email && <ErrorText>{errors.email}</ErrorText>}
       </FormInputWrapper>
@@ -110,16 +125,14 @@ const AddCustomerForm = ({ onClose, onCustomerAdded }) => {
           name="phoneNumber"
           placeholder="Phone Number"
           value={customerData.phoneNumber}
+          $color={state.colors.primary}
           onChange={(e) => {
-            // Allow only digits
             const value = e.target.value.replace(/\D/g, "");
-            // Limit to 10 digits
             if (value.length <= 10) {
               handleChange({ target: { name: "phoneNumber", value } });
             }
           }}
         />
-
         {errors.phoneNumber && <ErrorText>{errors.phoneNumber}</ErrorText>}
       </FormInputWrapper>
 
@@ -130,11 +143,16 @@ const AddCustomerForm = ({ onClose, onCustomerAdded }) => {
           placeholder="City"
           value={customerData.city}
           onChange={handleChange}
+          $color={state.colors.primary}
         />
         {errors.city && <ErrorText>{errors.city}</ErrorText>}
       </FormInputWrapper>
 
-      <SubmitButton type="submit" disabled={loading}>
+      <SubmitButton
+        type="submit"
+        disabled={loading}
+        $color={state.colors.primary}
+      >
         {loading ? "Adding..." : "Add Customer"}
       </SubmitButton>
     </FormContainer>

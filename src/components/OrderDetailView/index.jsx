@@ -15,7 +15,7 @@ const ShipmentDetailView = ({ shipment }) => {
 
   return (
     <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
-      <h2>Shipment Details</h2>
+      <h2>Order Details</h2>
       <p>
         <strong>Date:</strong> {new Date(orderDate).toLocaleDateString()}
       </p>
@@ -70,7 +70,7 @@ const ShipmentDetailView = ({ shipment }) => {
                   {product.quantity}
                 </td>
                 <td style={{ border: "1px solid #ddd", padding: "8px" }}>
-                  {product.priceAtShipment}
+                  {product.soldPrice}
                 </td>
                 <td style={{ border: "1px solid #ddd", padding: "8px" }}>
                   {product.shipmentId ? (

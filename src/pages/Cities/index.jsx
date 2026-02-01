@@ -11,18 +11,11 @@ import city4 from "../../assets/city-icons/city4.svg";
 import city5 from "../../assets/city-icons/city5.svg";
 import city6 from "../../assets/city-icons/city6.svg";
 import city7 from "../../assets/city-icons/city7.svg";
-import city8 from "../../assets/city-icons/city8.svg";
 
 const Cities = () => {
-  const { dispatch } = useAppContext();
+  const { dispatch, state } = useAppContext();
+  const cities = state.cities;
 
-  const [cities] = useState([
-    "Tokyo",
-    "Paris",
-    "Sydney",
-    "Vijayawada",
-    "Guntur",
-  ]);
   const [cityImages] = useState([
     city1,
     city2,
@@ -31,7 +24,6 @@ const Cities = () => {
     city5,
     city6,
     city7,
-    city8,
   ]);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -47,7 +39,7 @@ const Cities = () => {
 
   // Filter cities based on search term
   const filteredCities = cities.filter((city) =>
-    city.toLowerCase().includes(searchTerm.toLowerCase())
+    city.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (

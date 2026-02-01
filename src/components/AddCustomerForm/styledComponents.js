@@ -1,46 +1,67 @@
 import styled from "styled-components";
 
 export const FormContainer = styled.form`
+  position: relative;
+  width: 100%;
+  max-width: 400px;
   background: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  width: 350px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  padding: 24px;
+  border-radius: 10px;
 `;
 
-export const FormTitle = styled.h3`
-  margin: 0;
+export const CloseIcon = styled.div`
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  cursor: pointer;
+  color: #666;
+
+  &:hover {
+    color: ${({ $color }) => $color};
+  }
+`;
+
+export const FormTitle = styled.h2`
+  margin-bottom: 20px;
   text-align: center;
+  margin-top: -10px;
+  color: ${({ $color }) => $color};
 `;
 
 export const FormInputWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
+  margin-bottom: 14px;
 `;
 
 export const FormInput = styled.input`
-  padding: 8px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid ${({ $color }) => $color};
+
+  &:focus {
+    outline: none;
+    border-color: #007bff;
+  }
 `;
 
-export const ErrorText = styled.span`
+export const ErrorText = styled.p`
   color: red;
   font-size: 12px;
+  margin-top: 4px;
 `;
 
 export const SubmitButton = styled.button`
+  width: 100%;
   padding: 10px;
-  background-color: #2c7a7b;
-  color: #fff;
+  background: ${({ $color }) => $color};
+  color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
 
   &:disabled {
-    background-color: #ccc;
+    opacity: 0.7;
     cursor: not-allowed;
   }
 `;

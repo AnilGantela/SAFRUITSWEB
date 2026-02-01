@@ -10,6 +10,7 @@ const initialState = {
     primary: "#9c0101",
     secondary: "#e5383b",
   },
+  cities: ["Vijayawada", "Guntur"],
 };
 
 // Reducer

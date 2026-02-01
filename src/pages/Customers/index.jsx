@@ -3,9 +3,10 @@ import Cookies from "js-cookie";
 import axios from "axios";
 import Popup from "reactjs-popup";
 import { ToastContainer } from "react-toastify";
+import { useAppContext } from "../../context/AppContext";
 import "react-toastify/dist/ReactToastify.css";
 
-import AddCustomerForm from "../../components/AddCustomerForm"; // adjust path
+import AddCustomerForm from "../../components/AddCustomerForm";
 import {
   CustomersContainer,
   CustomersHeader,
@@ -19,6 +20,7 @@ import {
 const Customers = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [customers, setCustomers] = useState([]);
+  const { state } = useAppContext();
 
   const fetchCustomers = async () => {
     try {
@@ -29,7 +31,8 @@ const Customers = () => {
           headers: { Authorization: `Bearer ${token}` },
         },
       );
-      if (response.data && Array.isArray(response.data)) {
+
+      if (Array.isArray(response.data)) {
         setCustomers(response.data);
       }
     } catch (error) {
@@ -48,6 +51,7 @@ const Customers = () => {
   return (
     <CustomersContainer>
       <ToastContainer position="top-right" autoClose={3000} />
+
       <CustomersHeader
         style={{
           display: "flex",
@@ -68,15 +72,26 @@ const Customers = () => {
             style={{ padding: "5px", width: "200px" }}
           />
 
-          {/* Popup for adding customer */}
+          {/* Add Customer Popup */}
           <Popup
             trigger={
-              <button style={{ padding: "5px 10px" }}>Add Customer</button>
+              <button
+                style={{
+                  padding: "6px 12px",
+                  backgroundColor: state.colors.primary,
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                }}
+              >
+                Add Customer
+              </button>
             }
             modal
             nested
-            closeOnDocumentClick={true} // closes when clicking outside
-            closeOnEscape={true} // closes when pressing ESC
+            closeOnDocumentClick
+            closeOnEscape
             contentStyle={{
               background: "transparent",
               border: "none",
@@ -99,7 +114,7 @@ const Customers = () => {
       </CustomersHeader>
 
       <CustomersTable>
-        <CustomerTableHeader>
+        <CustomerTableHeader $bcolor={state.colors.primary}>
           <CustomerTableRow>
             <CustomerTableHeadTitle>S.No</CustomerTableHeadTitle>
             <CustomerTableHeadTitle>Name</CustomerTableHeadTitle>
@@ -120,7 +135,7 @@ const Customers = () => {
             </tr>
           ) : (
             filteredCustomers.map((customer, index) => (
-              <CustomerTableRow key={index}>
+              <CustomerTableRow key={customer._id || index}>
                 <CustomerTableDataCell>{index + 1}</CustomerTableDataCell>
                 <CustomerTableDataCell>
                   {customer.customerName}

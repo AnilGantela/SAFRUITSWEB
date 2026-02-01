@@ -76,3 +76,33 @@ export const ShipmentSelect = styled.select`
   padding: 10px;
   min-width: 200px;
 `;
+
+export const OrderTable = styled.table`
+  width: 100%;
+  margin-top: 20px;
+  border-collapse: collapse;
+`;
+
+export const OrderTH = styled.th`
+  padding: 10px;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+`;
+
+export const OrderTD = styled.td`
+  padding: 8px;
+  border: 1px solid #ddd;
+`;
+
+export const QtyInput = styled.input`
+  width: 70px;
+  padding: 4px;
+`;
+
+export const RemoveBtn = styled.button`
+  background: red;
+  color: white;
+  border: none;
+  padding: 5px 8px;
+  cursor: pointer;
+`;

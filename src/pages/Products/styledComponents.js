@@ -27,7 +27,8 @@ export const ProductsContainerHeaderContainer = styled.div`
   box-sizing: border-box;
   h1 {
     width: auto;
-    font-size: clamp(14px, 6vw, 25px);
+    font-size: clamp(15px, 6vw, 30px);
+    color: ${({ $color }) => $color};
   }
   input {
     flex: 1;

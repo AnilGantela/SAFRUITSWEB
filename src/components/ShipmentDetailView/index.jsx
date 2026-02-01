@@ -28,7 +28,7 @@ const ShipmentDetailView = ({ shipment: shipmentProp }) => {
           `https://backend-zmoa.onrender.com/shipments/${shipmentId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
-          }
+          },
         );
 
         setShipment(response.data);
@@ -52,6 +52,8 @@ const ShipmentDetailView = ({ shipment: shipmentProp }) => {
     transportCompany,
     vehicleNumber,
     city,
+    shipmentValue,
+    totalReceivedValue,
     products = [],
   } = shipment;
 
@@ -79,6 +81,12 @@ const ShipmentDetailView = ({ shipment: shipmentProp }) => {
       <p>
         <strong>City:</strong> {city || "N/A"}
       </p>
+      <p>
+        <strong>shipmentValue:</strong> {shipmentValue || "N/A"}
+      </p>
+      <p>
+        <strong>totalSoldValue:</strong> {totalReceivedValue || "N/A"}
+      </p>
 
       <h3>Products</h3>
       {products.length > 0 ? (
@@ -103,9 +111,7 @@ const ShipmentDetailView = ({ shipment: shipmentProp }) => {
               <th style={{ border: "1px solid #ddd", padding: "8px" }}>
                 Remaining Quantity
               </th>
-              <th style={{ border: "1px solid #ddd", padding: "8px" }}>
-                Price
-              </th>
+              <th style={{ border: "1px solid #ddd", padding: "8px" }}>C P</th>
             </tr>
           </thead>
           <tbody>

@@ -34,7 +34,7 @@ export const CustomersTable = styled.table`
 `;
 
 export const CustomerTableHeader = styled.thead`
-  background-color: #4caf50;
+  background-color: ${({ $bcolor }) => $bcolor};
   color: white;
 `;
 

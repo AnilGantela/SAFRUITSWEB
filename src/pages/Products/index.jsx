@@ -42,7 +42,7 @@ const Products = () => {
     try {
       const response = await axios.get(
         "https://backend-zmoa.onrender.com/products",
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       setProducts(response.data);
     } catch (error) {
@@ -55,7 +55,7 @@ const Products = () => {
     try {
       const response = await axios.get(
         `https://backend-zmoa.onrender.com/products/${productName}/categories`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       setCategories(response.data);
     } catch (error) {
@@ -111,7 +111,7 @@ const Products = () => {
       // Sum all category quantities
       return categories.reduce(
         (total, cat) => total + (cat.categoryQuantity || 0),
-        0
+        0,
       );
     }
   };
@@ -120,12 +120,12 @@ const Products = () => {
 
   // Filter products by search term
   const filteredProducts = products.filter((product) =>
-    product.productName.toLowerCase().includes(searchTerm.toLowerCase())
+    product.productName.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
     <ProductsContainer>
-      <ProductsContainerHeaderContainer>
+      <ProductsContainerHeaderContainer $color={state.colors.primary}>
         <h1>Products</h1>
 
         <ProductsSearchInput
