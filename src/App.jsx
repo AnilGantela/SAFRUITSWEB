@@ -13,6 +13,7 @@ import Customers from "./pages/Customers";
 import Orders from "./pages/Orders";
 import ShipmentDetailView from "./components/ShipmentDetailView";
 import AddOrderForm from "./components/AddOrderForm";
+import Customer from "./pages/Customer";
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/orders/create" element={<AddOrderForm />} />
+          <Route path="/customers/view" element={<Customer />} />
 
           {/* Dashboard routes with sidebar */}
           <Route element={<Layout />}>

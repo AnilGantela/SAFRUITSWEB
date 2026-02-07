@@ -13,13 +13,16 @@ import {
   FormInput,
   ProductContainer,
   Button,
-  CustomerInfo,
   ShipmentSelect,
   OrderTable,
   OrderTH,
   OrderTD,
   QtyInput,
   RemoveBtn,
+  FormContainer,
+  BillContainer,
+  FormHeader,
+  ProductsContainer,
 } from "./styledComponents";
 
 /* ---------------- HELPERS ---------------- */
@@ -55,8 +58,8 @@ const CreateOrder = () => {
       productName: "",
       categoryName: "",
       shipmentId: "",
-      quantity: 1,
-      soldPrice: 0,
+      quantity: "",
+      soldPrice: "",
       priceAtShipment: 0,
       shipments: [],
       categories: [],
@@ -258,253 +261,286 @@ const CreateOrder = () => {
   return (
     <OrderContainer>
       <ToastContainer />
-      <OrderHeader>Create Order</OrderHeader>
+      <FormContainer>
+        <Form onSubmit={handleSubmit}>
+          <FormHeader>
+            <OrderHeader>Create Order</OrderHeader>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Creating..." : "Create Order"}
+            </Button>
+          </FormHeader>
 
-      <Form onSubmit={handleSubmit}>
-        <FormRow>
-          <FormInput
-            placeholder="Customer Phone"
-            value={customerNumber}
-            onChange={(e) =>
-              setCustomerNumber(e.target.value.replace(/\D/g, "").slice(0, 10))
-            }
-          />
+          <FormRow>
+            <FormInput
+              placeholder="Customer Phone"
+              value={customerNumber}
+              onChange={(e) =>
+                setCustomerNumber(
+                  e.target.value.replace(/\D/g, "").slice(0, 10),
+                )
+              }
+            />
+            <FormInput
+              as="select"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+            >
+              <option value="">Select City</option>
+              {cities.map((c) => (
+                <option key={c}>{c}</option>
+              ))}
+            </FormInput>
+            <FormInput
+              placeholder="Customer Name"
+              value={customerDetails ? customerDetails.customerName : ""}
+              readOnly
+            />
+          </FormRow>
 
-          <FormInput
-            as="select"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-          >
-            <option value="">Select City</option>
-            {cities.map((c) => (
-              <option key={c}>{c}</option>
-            ))}
-          </FormInput>
-        </FormRow>
-
-        {customerDetails && (
-          <CustomerInfo>
-            <p>Name: {customerDetails.customerName}</p>
-            <p>Pending: {customerDetails.pendingAmount || 0}</p>
-          </CustomerInfo>
-        )}
-
-        <ProductContainer>
-          {products.map((prod, index) => (
-            <FormRow key={index}>
-              <FormInput
-                placeholder="Product Name"
-                value={prod.productName}
-                onChange={(e) =>
-                  setProducts((prev) =>
-                    prev.map((p, i) =>
-                      i === index
-                        ? { ...p, productName: e.target.value, shipmentId: "" }
-                        : p,
-                    ),
-                  )
-                }
-              />
-
-              <Button
-                type="button"
-                onClick={() => handleSearchShipments(index)}
-              >
-                Search
-              </Button>
-
-              {prod.categories.length > 0 && (
+          <ProductContainer>
+            {products.map((prod, index) => (
+              <FormRow key={index}>
                 <FormInput
-                  as="select"
-                  value={prod.categoryName}
+                  placeholder="Product Name"
+                  value={prod.productName}
                   onChange={(e) =>
                     setProducts((prev) =>
                       prev.map((p, i) =>
                         i === index
                           ? {
                               ...p,
-                              categoryName: e.target.value,
+                              productName: e.target.value,
                               shipmentId: "",
                             }
                           : p,
                       ),
                     )
                   }
+                />
+
+                <Button
+                  type="button"
+                  onClick={() => handleSearchShipments(index)}
                 >
-                  <option value="">Select Category</option>
-                  {prod.categories.map((c) => (
-                    <option key={c}>{c}</option>
-                  ))}
-                </FormInput>
-              )}
+                  Search
+                </Button>
 
-              <ShipmentSelect
-                value={prod.shipmentId}
-                onChange={(e) =>
-                  setProducts((prev) =>
-                    prev.map((p, i) => {
-                      if (i === index) {
-                        const selectedShipment = p.shipments.find(
-                          (s) => s._id === e.target.value,
-                        );
-                        const shipmentProduct = selectedShipment?.products.find(
-                          (pr) =>
-                            pr.productName.toLowerCase() ===
-                              p.productName.toLowerCase() &&
-                            (!p.categoryName ||
-                              pr.categoryName?.toLowerCase() ===
-                                p.categoryName.toLowerCase()),
-                        );
-                        return {
-                          ...p,
-                          shipmentId: e.target.value,
-                          priceAtShipment:
-                            shipmentProduct?.priceAtShipment || 0,
-                        };
-                      }
-                      return p;
-                    }),
-                  )
-                }
-              >
-                <option value="">Select Shipment</option>
-                {prod.shipments.map((s) => {
-                  const shipmentProduct = s.products.find(
-                    (p) =>
-                      p.productName.toLowerCase() ===
-                        prod.productName.toLowerCase() &&
-                      (!prod.categoryName ||
-                        p.categoryName?.toLowerCase() ===
-                          prod.categoryName.toLowerCase()),
-                  );
-                  if (!shipmentProduct) return null;
+                {prod.categories.length > 0 && (
+                  <FormInput
+                    as="select"
+                    value={prod.categoryName}
+                    onChange={(e) =>
+                      setProducts((prev) =>
+                        prev.map((p, i) =>
+                          i === index
+                            ? {
+                                ...p,
+                                categoryName: e.target.value,
+                                shipmentId: "",
+                              }
+                            : p,
+                        ),
+                      )
+                    }
+                  >
+                    <option value="">Select Category</option>
+                    {prod.categories.map((c) => (
+                      <option key={c}>{c}</option>
+                    ))}
+                  </FormInput>
+                )}
 
-                  const orderedQty = getOrderedQty(
-                    addedProducts,
-                    s._id,
-                    prod.productName,
-                    prod.categoryName,
-                  );
+                <ShipmentSelect
+                  value={prod.shipmentId}
+                  onChange={(e) =>
+                    setProducts((prev) =>
+                      prev.map((p, i) => {
+                        if (i === index) {
+                          const selectedShipment = p.shipments.find(
+                            (s) => s._id === e.target.value,
+                          );
+                          const shipmentProduct =
+                            selectedShipment?.products.find(
+                              (pr) =>
+                                pr.productName.toLowerCase() ===
+                                  p.productName.toLowerCase() &&
+                                (!p.categoryName ||
+                                  pr.categoryName?.toLowerCase() ===
+                                    p.categoryName.toLowerCase()),
+                            );
+                          return {
+                            ...p,
+                            shipmentId: e.target.value,
+                            priceAtShipment:
+                              shipmentProduct?.priceAtShipment || 0,
+                          };
+                        }
+                        return p;
+                      }),
+                    )
+                  }
+                >
+                  <option value="">Select Shipment</option>
+                  {prod.shipments.map((s) => {
+                    const shipmentProduct = s.products.find(
+                      (p) =>
+                        p.productName.toLowerCase() ===
+                          prod.productName.toLowerCase() &&
+                        (!prod.categoryName ||
+                          p.categoryName?.toLowerCase() ===
+                            prod.categoryName.toLowerCase()),
+                    );
+                    if (!shipmentProduct) return null;
 
-                  const availableQty =
-                    shipmentProduct.remainingQuantity - orderedQty;
-                  if (availableQty <= 0) return null;
+                    const orderedQty = getOrderedQty(
+                      addedProducts,
+                      s._id,
+                      prod.productName,
+                      prod.categoryName,
+                    );
 
-                  return (
-                    <option key={s._id} value={s._id}>
-                      {s.vehicleNumber} | {formatDate(s.shipmentDate)} |
-                      Remaining: {availableQty} | CP:{" "}
-                      {shipmentProduct.priceAtShipment}
-                    </option>
-                  );
-                })}
-              </ShipmentSelect>
+                    const availableQty =
+                      shipmentProduct.remainingQuantity - orderedQty;
+                    if (availableQty <= 0) return null;
 
-              <FormInput
-                type="number"
-                value={prod.quantity}
-                onChange={(e) =>
-                  setProducts((prev) =>
-                    prev.map((p, i) =>
-                      i === index
-                        ? { ...p, quantity: Number(e.target.value) }
-                        : p,
-                    ),
-                  )
-                }
-              />
+                    return (
+                      <option key={s._id} value={s._id}>
+                        {s.vehicleNumber} | {formatDate(s.shipmentDate)} |
+                        Remaining: {availableQty} | CP:{" "}
+                        {shipmentProduct.priceAtShipment}
+                      </option>
+                    );
+                  })}
+                </ShipmentSelect>
 
-              <FormInput
-                type="number"
-                step={0.01}
-                placeholder="Sold Price"
-                value={prod.soldPrice}
-                onChange={(e) =>
-                  setProducts((prev) =>
-                    prev.map((p, i) =>
-                      i === index
-                        ? { ...p, soldPrice: Number(e.target.value) }
-                        : p,
-                    ),
-                  )
-                }
-              />
+                <FormInput
+                  type="number"
+                  value={prod.quantity}
+                  placeholder="Quantity"
+                  onChange={(e) =>
+                    setProducts((prev) =>
+                      prev.map((p, i) =>
+                        i === index
+                          ? { ...p, quantity: Number(e.target.value) }
+                          : p,
+                      ),
+                    )
+                  }
+                />
 
-              <Button type="button" onClick={() => handleAddProduct(index)}>
-                Add
-              </Button>
-            </FormRow>
-          ))}
-        </ProductContainer>
+                <FormInput
+                  type="number"
+                  placeholder="Sold Price"
+                  value={prod.soldPrice}
+                  onChange={(e) =>
+                    setProducts((prev) =>
+                      prev.map((p, i) =>
+                        i === index
+                          ? { ...p, soldPrice: Number(e.target.value) }
+                          : p,
+                      ),
+                    )
+                  }
+                />
 
-        {addedProducts.length > 0 && (
-          <OrderTable>
-            <thead>
-              <tr>
-                <OrderTH>Product</OrderTH>
-                <OrderTH>Category</OrderTH>
-                <OrderTH>Shipment</OrderTH>
-                <OrderTH>Qty</OrderTH>
-                <OrderTH>CP</OrderTH>
-                <OrderTH>SP</OrderTH>
-                <OrderTH>Amount</OrderTH>
-                <OrderTH>Action</OrderTH>
-              </tr>
-            </thead>
-            <tbody>
-              {addedProducts.map((p, idx) => (
-                <tr key={idx}>
-                  <OrderTD>{p.productName}</OrderTD>
-                  <OrderTD>{p.categoryName || "-"}</OrderTD>
-                  <OrderTD>
-                    {p.vehicleNumber} | {formatDate(p.shipmentDate)}
-                  </OrderTD>
-                  <OrderTD>
-                    <QtyInput
-                      type="number"
-                      min={1}
-                      max={p.maxQuantity}
-                      value={p.quantity}
-                      onChange={(e) =>
-                        setAddedProducts((prev) =>
-                          prev.map((x, i) =>
-                            i === idx
-                              ? {
-                                  ...x,
-                                  quantity: Number(e.target.value),
-                                  remainingQuantity:
-                                    x.maxQuantity - Number(e.target.value),
-                                }
-                              : x,
-                          ),
-                        )
-                      }
-                    />
-                  </OrderTD>
-                  <OrderTD>{p.priceAtShipment}</OrderTD>
-                  <OrderTD>{p.soldPrice.toFixed(2)}</OrderTD>
-                  <OrderTD>{(p.soldPrice * p.quantity).toFixed(2)}</OrderTD>
-                  <OrderTD>
-                    <RemoveBtn
-                      onClick={() =>
-                        setAddedProducts((prev) =>
-                          prev.filter((_, i) => i !== idx),
-                        )
-                      }
-                    >
-                      Remove
-                    </RemoveBtn>
-                  </OrderTD>
+                <Button type="button" onClick={() => handleAddProduct(index)}>
+                  Add
+                </Button>
+              </FormRow>
+            ))}
+          </ProductContainer>
+        </Form>
+        <ProductsContainer>
+          {" "}
+          {addedProducts.length > 0 && (
+            <OrderTable>
+              <thead>
+                <tr>
+                  <OrderTH>Product</OrderTH>
+
+                  <OrderTH>Shipment</OrderTH>
+                  <OrderTH>Qty</OrderTH>
+                  <OrderTH>CP</OrderTH>
+                  <OrderTH>SP</OrderTH>
+                  <OrderTH>Amount</OrderTH>
+                  <OrderTH>Action</OrderTH>
                 </tr>
-              ))}
-            </tbody>
-          </OrderTable>
-        )}
+              </thead>
+              <tbody>
+                {addedProducts.map((p, idx) => (
+                  <tr key={idx}>
+                    <OrderTD>
+                      {p.categoryName ? p.categoryName : p.productName}
+                    </OrderTD>
 
-        <Button type="submit" disabled={loading}>
-          {loading ? "Creating..." : "Create Order"}
-        </Button>
-      </Form>
+                    <OrderTD>
+                      {p.vehicleNumber} | {formatDate(p.shipmentDate)}
+                    </OrderTD>
+                    <OrderTD>
+                      <QtyInput
+                        type="number"
+                        min={1}
+                        max={p.maxQuantity}
+                        value={p.quantity}
+                        onChange={(e) =>
+                          setAddedProducts((prev) =>
+                            prev.map((x, i) =>
+                              i === idx
+                                ? {
+                                    ...x,
+                                    quantity: Number(e.target.value),
+                                    remainingQuantity:
+                                      x.maxQuantity - Number(e.target.value),
+                                  }
+                                : x,
+                            ),
+                          )
+                        }
+                      />
+                    </OrderTD>
+                    <OrderTD>{p.priceAtShipment}</OrderTD>
+                    <OrderTD>
+                      <QtyInput
+                        type="number"
+                        min={1}
+                        value={p.soldPrice}
+                        onChange={(e) =>
+                          setAddedProducts((prev) =>
+                            prev.map((x, i) =>
+                              i === idx
+                                ? {
+                                    ...x,
+                                    soldPrice: Number(e.target.value),
+                                  }
+                                : x,
+                            ),
+                          )
+                        }
+                      />
+                    </OrderTD>
+
+                    <OrderTD>{(p.soldPrice * p.quantity).toFixed(2)}</OrderTD>
+                    <OrderTD>
+                      <RemoveBtn
+                        onClick={() =>
+                          setAddedProducts((prev) =>
+                            prev.filter((_, i) => i !== idx),
+                          )
+                        }
+                      >
+                        Remove
+                      </RemoveBtn>
+                    </OrderTD>
+                  </tr>
+                ))}
+              </tbody>
+            </OrderTable>
+          )}
+        </ProductsContainer>
+      </FormContainer>
+      <BillContainer>
+        <OrderHeader>Summary</OrderHeader>
+      </BillContainer>
     </OrderContainer>
   );
 };

@@ -25,6 +25,8 @@ import city3 from "../../assets/fruit-icons/fruit3.svg";
 import city4 from "../../assets/fruit-icons/fruit4.svg";
 import city5 from "../../assets/fruit-icons/fruit5.svg";
 import city6 from "../../assets/fruit-icons/fruit6.svg";
+import apple from "../../assets/fruit-icons/apple.svg";
+import banana from "../../assets/fruit-icons/banana.svg";
 
 const Products = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -35,7 +37,24 @@ const Products = () => {
   const { state } = useAppContext();
 
   const token = Cookies.get("saFruitsToken");
-  const cityImages = [city1, city2, city3, city4, city5, city6];
+
+  // Map productName to image
+  const productImages = {
+    Apple: apple,
+    City1: city1,
+    City2: city2,
+    City3: city3,
+    City4: city4,
+    City5: city5,
+    City6: city6,
+    Banana: banana,
+    // Add more productName → image mappings here
+  };
+
+  const getImageForProduct = (productName) => {
+    // Return the mapped image or fallback to apple
+    return productImages[productName] || apple;
+  };
 
   // Fetch all products
   const fetchProducts = async () => {
@@ -76,39 +95,29 @@ const Products = () => {
     }
   }, [selectedProduct]);
 
-  const getRandomImage = () => {
-    const randomIndex = Math.floor(Math.random() * cityImages.length);
-    return cityImages[randomIndex];
-  };
-
   const handleCityClick = (product) => {
-    // If nothing is selected yet
     if (!selectedProduct) {
       setSelectedProduct(product);
       setIsOpen(true);
       return;
     }
 
-    // If the clicked product is the currently selected one, close sidebar
     if (product.productName === selectedProduct.productName) {
       setIsOpen(false);
       setSelectedProduct(null);
       return;
     }
 
-    // If a different product is clicked, select it
     setSelectedProduct(product);
     setIsOpen(true);
   };
 
-  // Calculate displayed quantity for selectedProduct
   const getDisplayedQuantity = () => {
     if (!selectedProduct) return 0;
 
     if (selectedProduct.productQuantity > 0) {
       return selectedProduct.productQuantity;
     } else {
-      // Sum all category quantities
       return categories.reduce(
         (total, cat) => total + (cat.categoryQuantity || 0),
         0,
@@ -118,7 +127,6 @@ const Products = () => {
 
   const closeSideBar = () => setIsOpen(false);
 
-  // Filter products by search term
   const filteredProducts = products.filter((product) =>
     product.productName.toLowerCase().includes(searchTerm.toLowerCase()),
   );
@@ -154,11 +162,11 @@ const Products = () => {
       </Popup>
 
       <ProductsContentContainer>
-        {filteredProducts.map((product, index) => (
+        {filteredProducts.map((product) => (
           <CityBox
             key={product._id}
             cityName={product.productName}
-            cityImage={getRandomImage()}
+            cityImage={getImageForProduct(product.productName)}
             onClick={() => handleCityClick(product)}
           />
         ))}

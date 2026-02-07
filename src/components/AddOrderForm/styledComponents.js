@@ -1,14 +1,46 @@
 import styled from "styled-components";
 
 export const OrderContainer = styled.div`
-  width: 90%;
-  max-width: 1200px;
-  margin: auto;
-  padding: 20px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+`;
+
+export const FormContainer = styled.div`
+  width: 60%;
+  border: 2px solid red;
+  text-align: left;
+`;
+
+export const ProductsContainer = styled.div`
+  padding: 10px;
+`;
+
+export const FormHeader = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding-right: 10px;
+  align-items: center;
+`;
+
+export const CustomerInfo = styled.div`
+  background-color: #f1f1f1;
+  padding: 5px;
+  border-radius: 5px;
+  width: 35%;
+  p {
+    margin: 5px 0;
+  }
+`;
+
+export const BillContainer = styled.div`
+  width: 39%;
+  border: 2px solid green;
+  text-align: center;
 `;
 
 export const OrderHeader = styled.h1`
-  text-align: center;
   margin-bottom: 20px;
 `;
 
@@ -22,12 +54,15 @@ export const FormRow = styled.div`
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+  height: 50px;
 `;
 
 export const FormInput = styled.input`
   padding: 10px;
-  flex: 1;
   min-width: 150px;
+  flex: 1;
+  max-width: 300px;
+  height: 40px;
 `;
 
 export const ProductContainer = styled.div`
@@ -46,6 +81,7 @@ export const ProductRow = styled.div`
 export const Button = styled.button`
   padding: 8px 12px;
   background-color: #4caf50;
+  height: 40px;
   color: white;
   border: none;
   cursor: pointer;
@@ -63,18 +99,10 @@ export const RemoveButton = styled.button`
   cursor: pointer;
 `;
 
-export const CustomerInfo = styled.div`
-  background-color: #f1f1f1;
-  padding: 10px;
-  border-radius: 5px;
-  p {
-    margin: 5px 0;
-  }
-`;
-
 export const ShipmentSelect = styled.select`
   padding: 10px;
   min-width: 200px;
+  height: 40px;
 `;
 
 export const OrderTable = styled.table`

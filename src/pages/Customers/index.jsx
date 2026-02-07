@@ -135,7 +135,15 @@ const Customers = () => {
             </tr>
           ) : (
             filteredCustomers.map((customer, index) => (
-              <CustomerTableRow key={customer._id || index}>
+              <CustomerTableRow
+                key={customer._id || index}
+                onClick={() =>
+                  window.open(
+                    `/customers/view?name=${customer.customerName}&phone=${customer.phoneNumber} `,
+                    "_blank",
+                  )
+                }
+              >
                 <CustomerTableDataCell>{index + 1}</CustomerTableDataCell>
                 <CustomerTableDataCell>
                   {customer.customerName}
