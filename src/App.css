@@ -1,0 +1,25 @@
+@media print {
+  /* Hide everything except invoice */
+  body * {
+    visibility: hidden;
+  }
+  #invoice-preview,
+  #invoice-preview * {
+    visibility: visible;
+  }
+  #invoice-preview {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 210mm; /* A4 width */
+    min-height: 297mm; /* A4 height */
+    padding: 20mm;
+    box-sizing: border-box;
+  }
+
+  /* Remove default browser headers/footers */
+  @page {
+    margin: 0;
+    size: A4;
+  }
+}

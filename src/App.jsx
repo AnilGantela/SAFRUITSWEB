@@ -14,6 +14,9 @@ import Orders from "./pages/Orders";
 import ShipmentDetailView from "./components/ShipmentDetailView";
 import AddOrderForm from "./components/AddOrderForm";
 import Customer from "./pages/Customer";
+import Payment from "./pages/Payment";
+import AddPaymentForm from "./components/AddPaymentForm";
+import AddInvoiceForm from "./components/AddInvoiceForm";
 
 function App() {
   return (
@@ -25,12 +28,15 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/orders/create" element={<AddOrderForm />} />
           <Route path="/customers/view" element={<Customer />} />
+          <Route path="/payments/create" element={<AddPaymentForm />} />
+          <Route path="/invoice-create" element={<AddInvoiceForm />} />
 
           {/* Dashboard routes with sidebar */}
           <Route element={<Layout />}>
             <Route path="/" element={<HomeContent />} />
             <Route path="/cities" element={<Cities />} />
             <Route path="/products" element={<Products />} />
+            <Route path="/payments" element={<Payment />} />
             // App.jsx or router config
             <Route path="/shipments">
               <Route index element={<Shipments />} />

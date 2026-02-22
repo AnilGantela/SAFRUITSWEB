@@ -19,14 +19,12 @@ import axios from "axios";
 import { useAppContext } from "../../context/AppContext";
 
 // Import fruit images
-import city1 from "../../assets/fruit-icons/fruit1.svg";
-import city2 from "../../assets/fruit-icons/fruit2.svg";
-import city3 from "../../assets/fruit-icons/fruit3.svg";
-import city4 from "../../assets/fruit-icons/fruit4.svg";
-import city5 from "../../assets/fruit-icons/fruit5.svg";
-import city6 from "../../assets/fruit-icons/fruit6.svg";
-import apple from "../../assets/fruit-icons/apple.svg";
-import banana from "../../assets/fruit-icons/banana.svg";
+
+import cherries from "../../assets/fruit-icons/cherries.jpg";
+import orange from "../../assets/fruit-icons/orange.jpg";
+import kiwi from "../../assets/fruit-icons/kiwi.jpg";
+import apple from "../../assets/fruit-icons/apple.jpg";
+import banana from "../../assets/fruit-icons/banana.png";
 
 const Products = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -40,15 +38,11 @@ const Products = () => {
 
   // Map productName to image
   const productImages = {
-    Apple: apple,
-    City1: city1,
-    City2: city2,
-    City3: city3,
-    City4: city4,
-    City5: city5,
-    City6: city6,
-    Banana: banana,
-    // Add more productName → image mappings here
+    APPLE: apple,
+    CHERRIES: cherries,
+    ORANGE: orange,
+    KIWI: kiwi,
+    BANANA: banana,
   };
 
   const getImageForProduct = (productName) => {
@@ -64,6 +58,7 @@ const Products = () => {
         { headers: { Authorization: `Bearer ${token}` } },
       );
       setProducts(response.data);
+      console.log(response.data);
     } catch (error) {
       console.error("Error fetching products:", error);
     }

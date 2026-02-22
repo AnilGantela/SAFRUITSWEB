@@ -67,6 +67,9 @@ const SideNavBar = () => {
           <NavItem onClick={closeMenu}>
             <Link to="/shipments">Shipments</Link>
           </NavItem>
+          <NavItem onClick={closeMenu}>
+            <Link to="/payments">Payments</Link>
+          </NavItem>
         </ul>
 
         <BottomContainer>
