@@ -242,15 +242,17 @@ const CreateOrder = () => {
 
     setLoading(true);
     try {
-      await axios.post(
+      const response = await axios.post(
         "https://backend-zmoa.onrender.com/orders/create",
         { customerNumber, city, products: addedProducts },
         { headers: { Authorization: `Bearer ${token}` } },
       );
+
       toast.success("Order created");
       setAddedProducts([]);
-    } catch {
-      toast.error("Order failed");
+    } catch (error) {
+      console.log(error.response?.data);
+      toast.error(error.response?.data?.message || "Order failed");
     } finally {
       setLoading(false);
     }

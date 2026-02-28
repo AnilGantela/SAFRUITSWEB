@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { FiTrash2 } from "react-icons/fi";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 
 import {
   FormWrapper,
@@ -211,6 +211,7 @@ const AddShipmentForm = ({ onClose, onShipmentAdded }) => {
   /* ---------------- UI ---------------- */
   return (
     <FormWrapper onSubmit={handleSubmit}>
+      <ToastContainer />
       <FromBox>
         <FormContentContainer>
           <FormContentContainerFirstRow>
