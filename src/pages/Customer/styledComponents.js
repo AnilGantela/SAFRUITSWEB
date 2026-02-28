@@ -10,7 +10,6 @@ export const CustomerPage = styled.div`
 
 export const CustomerInfoContainer = styled.div`
   width: 320px;
-  border: 2px solid #e5383b;
   margin-left: -10px;
   padding-top: 20px;
 `;
@@ -43,7 +42,6 @@ export const CustomerInfoItem = styled.div`
 
 export const CustomerDataContainer = styled.div`
   flex: 1;
-  border: 2px solid #e5383b;
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -61,7 +59,6 @@ export const ChartsContainer = styled.div`
   gap: 20px;
   padding: 10px;
   flex-wrap: wrap;
-  border: 2px solid #e5383b;
 `;
 
 export const ChartCard = styled.div`
@@ -73,7 +70,7 @@ export const ChartCard = styled.div`
   transition: 0.3s ease;
   h3 {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     font-size: 16px;
     color: #333;
   }
@@ -152,7 +149,6 @@ export const PaginationContainer = styled.div`
 export const PaginationButton = styled.button`
   padding: 4px 10px;
   border-radius: 4px;
-  border: 1px solid #9c0101;
   background: white;
   color: #9c0101;
   cursor: pointer;
